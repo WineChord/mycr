@@ -112,6 +112,19 @@ Prefer `gh` when it is authenticated; otherwise use the GitHub connector tools.
      `product_decision_needed`. CI green, a plausible diff, generated tests, or
      an implementation that matches the original reporter's proposed fix are
      not enough by themselves to establish necessity.
+   - Be adversarial about self-contained problem narratives. A linked issue
+     opened by the PR author, an issue that is immediately closed by the same
+     author's PR, or a report that can only be reproduced with a private API
+     key, rare vendor account, customer tenant, hardware device, private
+     dataset, regional endpoint, or other inaccessible environment is not
+     independent evidence. Require at least one reviewer-verifiable artifact:
+     sanitized raw request/response payloads, provider documentation, public
+     protocol behavior, maintainer reproduction on current base, a fake server
+     or contract test that demonstrates the base bug without private
+     credentials, or an explicit maintainer statement accepting the premise.
+     If the PR only proves behavior on its own branch, mocks only the proposed
+     behavior, or depends on a provider claim the reviewer cannot inspect, block
+     approval and merge as `insufficient_evidence` / `plausible_but_unproven`.
    - Treat source-problem evidence as a first-class gate. A candidate can be
      approved or merged only when the problem premise is confirmed, or when it
      is an explicitly scoped feature/design change whose motivation is clear
@@ -761,6 +774,14 @@ raw payloads, tests, and current base-branch code path. State whether the
 problem is confirmed on the current base, plausible but unproven,
 contradicted/stale, or waiting on a product/contract decision. Explain why the
 edited code path follows from that evidence, or why it does not.
+
+Treat self-authored linked issues and private-environment claims as adversarial
+until independently verified. If the premise depends on an inaccessible vendor
+API key, tenant, regional endpoint, hardware device, private dataset, or other
+environment that the reviewer cannot inspect, require sanitized payloads,
+public provider documentation, maintainer reproduction, or a contract/fake-server
+test proving the current base bug. Branch-local tests or mocks that only encode
+the proposed behavior are not enough.
 
 Separate the underlying user pain from any implementation proposed in the issue
 or PR. Assess whether the selected API, default, configuration option,

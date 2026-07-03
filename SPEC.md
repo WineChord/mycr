@@ -49,6 +49,17 @@ cause, the report should use structured blocker kinds such as `necessity`,
 `solution_fit` instead of letting a green CI run, plausible diff, or literal
 implementation of a requested fix imply merge readiness.
 
+Linked issues should not be treated as independent evidence merely because they
+are detailed. If the issue is self-authored by the PR author, immediately closed
+by that author's PR, or depends on an inaccessible vendor account, private API
+key, tenant, hardware device, dataset, regional endpoint, or customer-only log,
+the report must require reviewer-verifiable evidence before approval. Acceptable
+evidence can include sanitized raw payloads, public provider documentation,
+maintainer reproduction on current base, or a contract/fake-server test that
+demonstrates the current-base bug without private credentials. Branch-local
+tests that only encode the submitted behavior should be reported as
+`insufficient_evidence`, not merge readiness.
+
 Some PRs can be technically reviewable but still not appropriate for automated
 approval or merge. When labels, linked issue text, maintainer discussion,
 multiple active PRs for the same issue, security-boundary scope, public API or
