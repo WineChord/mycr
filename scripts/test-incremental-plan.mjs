@@ -186,6 +186,27 @@ function queueItem(plan, number = 100) {
 }
 
 {
+  const current = pr({
+    labels: ["needs-review"],
+  });
+  const legacy = pr();
+  legacy.base = legacy.base_ref;
+  legacy.draft = legacy.is_draft;
+  legacy.wip = legacy.is_wip;
+  delete legacy.base_ref;
+  delete legacy.is_draft;
+  delete legacy.is_wip;
+  delete legacy.labels;
+
+  const plan = makePlan(currentSnapshot([current]), previousSnapshot([legacy]), {
+    overlapMinutes: 10,
+    forceFullSweepHours: 24,
+  });
+  assert.equal(queueItem(plan).action, actionCarryForward);
+  assert.deepEqual(queueItem(plan).reasons, [reasonUnchanged]);
+}
+
+{
   const basePr = pr();
   const plan = makePlan(
     currentSnapshot([basePr]),

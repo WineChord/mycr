@@ -208,9 +208,9 @@ function normalizeFingerprint(pr, explicitField, fallbackFields) {
 function normalizePullRequest(pr) {
   const labels = normalizeLabels(pr);
   const title = asString(pr.title);
-  const isDraft = Boolean(pr.is_draft ?? pr.isDraft);
+  const isDraft = Boolean(pr.is_draft ?? pr.isDraft ?? pr.draft);
   const headSha = asString(pr.head_sha ?? pr.headSha);
-  const baseRef = asString(pr.base_ref ?? pr.baseRefName ?? pr.baseRef);
+  const baseRef = asString(pr.base_ref ?? pr.baseRefName ?? pr.baseRef ?? pr.base);
   const updatedAt = normalizeDate(pr.updated_at ?? pr.updatedAt);
   const latestActivityAt = normalizeDate(
     pr.latest_activity_at ?? pr.latestActivityAt ?? pr.updated_at ?? pr.updatedAt,
@@ -223,7 +223,7 @@ function normalizePullRequest(pr) {
     author: asString(pr.author ?? pr.author_login ?? pr.authorLogin),
     state: asString(pr.state || "OPEN").toUpperCase(),
     is_draft: isDraft,
-    is_wip: Boolean(pr.is_wip ?? pr.isWip ?? hasWipMarker(title, labels)),
+    is_wip: Boolean(pr.is_wip ?? pr.isWip ?? pr.wip ?? hasWipMarker(title, labels)),
     labels,
     base_ref: baseRef,
     head_ref: asString(pr.head_ref ?? pr.headRefName ?? pr.headRef),
@@ -402,7 +402,6 @@ function readinessFingerprint(pr) {
     state: pr.state,
     is_draft: pr.is_draft,
     is_wip: pr.is_wip,
-    labels: pr.labels,
   });
 }
 
