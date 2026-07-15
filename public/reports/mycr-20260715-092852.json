@@ -1,0 +1,2157 @@
+{
+  "title": "MyCR 全量报告 2026-07-15 09:28",
+  "generated_at": "2026-07-15T09:56:00+08:00",
+  "repo": "trpc-group/trpc-agent-go",
+  "repo_info": {
+    "owner": "trpc-group",
+    "repo": "trpc-agent-go",
+    "branch": "main",
+    "open_prs": 97,
+    "processed": 5,
+    "approved": 0,
+    "merged": 0,
+    "commented": 5,
+    "maintained": 0,
+    "skipped": 92,
+    "inline_comments": 11
+  },
+  "overview": "本次完成 MyCR 仓库同步和 trpc-agent-go open PR 全量台账刷新：当前 open PR 共 97 个，#2228 已从上次台账移除，没有新增 PR。深度复核聚焦最近变化、既有评论、候选示例 PR 和自有 PR 状态；最终只提交代码评论，覆盖 #2222、#2193、#2192、#2191、#2190，合计 11 条 inline comments。没有提交 LGTM、approval、request-changes review 或 merge。其余 PR 均进入带原因的暂缓分组，包括 required check 阻塞、Draft/WIP、自有 PR 不自审、已有评论等待作者处理、已复核待维护者确认，以及等待下一次变化后复核。#2155 自有 PR 本次只检查状态，未发现需要自动修复的 merge conflict。",
+  "approved": [],
+  "commented": [
+    {
+      "number": 2222,
+      "title": "tes:Feat cr agent",
+      "url": "https://github.com/trpc-group/trpc-agent-go/pull/2222",
+      "author": "xiaocaidie313",
+      "head_sha": "135a405b578aac4c3cb5de7ae806601cf5695122",
+      "status": "commented",
+      "technical_background": "Code review agent examples combine diff parsing, sandbox command execution, skill/tool selection, and persistent reports. The critical contract is that untrusted repository content and model-selected commands stay behind the advertised permission and sandbox boundaries.",
+      "problem": "The PR adds a skills-based Go code review agent example with fake and real LLM review paths, sandbox runners, diff parsing, SQLite storage, fixtures, and generated reports.",
+      "necessity_assessment": "The example is valuable for demonstrating a practical review workflow, but the safety model has to be correct because readers may copy it into real repositories.",
+      "evidence_checked": "Reviewed the current head diff for llmreview, sandbox runner, diff parser, storage/report surfaces, and file patches from the GitHub files API before posting comments.",
+      "problem_framing": "The main risks are execution authority and input trust: an LLM should not gain a command path outside the policy, and a sandbox should not receive unsanitized local repository contents.",
+      "approach": "The implementation wires llmagent skills, repository diff loading, sandbox command execution, and report persistence into a CLI example.",
+      "implementation_derivation": "The design is derived from the existing skill/tool execution model and codeexecutor workspaces, but the new example must narrow those generic capabilities for review-specific safety.",
+      "solution_fit_assessment": "The feature shape fits the example goal, while the current permission profile, repository staging, and unified-diff parsing leave correctness and security gaps.",
+      "alternative_designs": "A safer variant would use knowledge-only skill access plus a dedicated checked runner; repository staging can be based on tracked files and explicit changed files instead of whole-directory copy.",
+      "tradeoffs": "Restricting skill execution and sanitized staging adds setup code, but it keeps the example aligned with its own security claims and avoids leaking local artifacts.",
+      "design_assessment": "The example architecture is coherent, but it needs tighter boundaries before it can serve as a reliable reference implementation.",
+      "modules": "examples/skills_code_review_agent/internal/llmreview, internal/sandbox, internal/diff, CLI wiring, fixtures, and output report examples.",
+      "api_surface": "No library API is changed; the user-visible surface is an examples CLI and its skill/profile files.",
+      "change_inventory": "Adds a code-review-agent example with skill docs, LLM review path, sandbox runner, diff parser, storage, fixtures, and report outputs.",
+      "semantic_changes": "Introduces an example flow that can parse diffs, run checks, store findings, and optionally delegate review reasoning to an LLM.",
+      "module_impact": "Impact is scoped to examples, but copied patterns could influence downstream review tooling.",
+      "cross_module_impact": "Touches agent skill execution and codeexecutor concepts through example integration, without changing core packages.",
+      "behavior_impact": "Without fixes, LLM mode can escape the intended policy path, full repository staging can expose local files, and standard unified diffs can be silently ignored.",
+      "tests_docs": "Existing fixtures and tests cover several happy paths; additional coverage is needed for standard unified diffs and sanitized staging behavior.",
+      "outcome": "Posted three inline comments covering skill execution policy, repository staging hygiene, and standard unified diff parsing.",
+      "ci_state": "Candidate checks were refreshed; review comments determine the current outcome.",
+      "review_action": "Posted 3 inline GitHub review comments; no approval, LGTM, request-changes review, or merge was submitted.",
+      "inline_comments": [
+        {
+          "path": "examples/skills_code_review_agent/internal/llmreview/review.go",
+          "line": 94,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2222#discussion_r3583921990",
+          "severity": "high",
+          "focus": "skill execution policy",
+          "body": "`SkillToolProfileFull` exposes `skill_run`, but that execution path is not checked by this example's `PermissionPolicy`, so LLM mode can invoke arbitrary skill commands outside the advertised allow/deny and env whitelist. Use `SkillToolProfileKnowledgeOnly` here, or expose a purpose-built runner that applies the same permission policy before any command execution.\n<details><summary>中文</summary>\n`SkillToolProfileFull` 会暴露 `skill_run`，但这条执行路径没有走这个示例里的 `PermissionPolicy`，所以 LLM 模式可以绕过宣称的允许/拒绝策略和环境变量白名单去调用任意 skill 命令。这里建议改用 `SkillToolProfileKnowledgeOnly`，或者只暴露一个会先执行同一套权限校验的专用 runner。\n</details>"
+        },
+        {
+          "path": "examples/skills_code_review_agent/internal/sandbox/runner.go",
+          "line": 399,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2222#discussion_r3583922116",
+          "severity": "high",
+          "focus": "sandbox repository staging",
+          "body": "`PutDirectory` stages the entire host repository for `--repo-path`, which can copy `.git`, ignored/untracked files, or local secrets into the sandbox. Stage a sanitized tree instead, for example tracked files from `git archive`/`git ls-files` plus explicit changed files, and exclude `.git`, ignored files, and secret patterns.\n<details><summary>中文</summary>\n`PutDirectory` 会把 `--repo-path` 指向的整个宿主机仓库放进 sandbox，这可能把 `.git`、被 ignore 的文件、未跟踪产物或本地密钥一起带进去。建议改成只放入清理过的文件树，例如 `git archive`/`git ls-files` 得到的 tracked files 加上明确选择的改动文件，并排除 `.git`、ignore 文件和常见密钥模式。\n</details>"
+        },
+        {
+          "path": "examples/skills_code_review_agent/internal/diff/diff.go",
+          "line": 102,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2222#discussion_r3583922284",
+          "severity": "medium",
+          "focus": "unified diff parser",
+          "body": "`--diff-file` can be a standard unified diff, but this parser only creates `current` after `diff --git`; a patch starting with `--- old` / `+++ new` produces no `FileChange`. Initialize a file change on `--- ` when `current` is nil, attach the `+++ ` path, and add coverage for non-git unified diffs.\n<details><summary>中文</summary>\n`--diff-file` 声称可以接收普通 unified diff，但这里只有遇到 `diff --git` 才会创建 `current`；如果 patch 直接以 `--- old` / `+++ new` 开头，就不会产生任何 `FileChange`。建议在 `current` 为空时遇到 `--- ` 也初始化文件变更，再用 `+++ ` 绑定新路径，并补上非 git unified diff 的测试。\n</details>"
+        }
+      ],
+      "blockers": [
+        {
+          "kind": "implementation_scope",
+          "summary": "skill execution policy: examples/skills_code_review_agent/internal/llmreview/review.go:94",
+          "path": "examples/skills_code_review_agent/internal/llmreview/review.go",
+          "line": 94,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2222#discussion_r3583921990",
+          "verification": "Comment was posted on the current PR head and recorded with its GitHub discussion URL."
+        },
+        {
+          "kind": "implementation_scope",
+          "summary": "sandbox repository staging: examples/skills_code_review_agent/internal/sandbox/runner.go:399",
+          "path": "examples/skills_code_review_agent/internal/sandbox/runner.go",
+          "line": 399,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2222#discussion_r3583922116",
+          "verification": "Comment was posted on the current PR head and recorded with its GitHub discussion URL."
+        },
+        {
+          "kind": "implementation_scope",
+          "summary": "unified diff parser: examples/skills_code_review_agent/internal/diff/diff.go:102",
+          "path": "examples/skills_code_review_agent/internal/diff/diff.go",
+          "line": 102,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2222#discussion_r3583922284",
+          "verification": "Comment was posted on the current PR head and recorded with its GitHub discussion URL."
+        }
+      ],
+      "risk": "skill execution policy; sandbox repository staging; unified diff parser",
+      "merge_policy": "blocked_by_review_findings"
+    },
+    {
+      "number": 2193,
+      "title": "examples: add tool execution safety guard",
+      "url": "https://github.com/trpc-group/trpc-agent-go/pull/2193",
+      "author": "March-77",
+      "head_sha": "03d5db98e579a3744d5d4429a327974441aa482f",
+      "status": "commented",
+      "technical_background": "A tool execution safety guard classifies commands, working directories, environment, network access, and filesystem targets before a tool run. The contract is only useful if every execution field that can access protected paths is covered.",
+      "problem": "The PR adds an example safety guard for command execution with policies, samples, reports, and tests.",
+      "necessity_assessment": "The example addresses a real safety need for agent tool execution, but protected working directories must be enforced as part of the same policy.",
+      "evidence_checked": "Reviewed the guard policy structures, command classifier, forbidden path logic, samples, and current PR diff before posting the inline comment.",
+      "problem_framing": "Forbidden path checks currently treat the command string as the only access vector even though the request model includes a working directory.",
+      "approach": "The implementation parses command requests, applies deny/ask/allow rules, and emits audit/report artifacts for example scenarios.",
+      "implementation_derivation": "The guard derives safety decisions from policy arrays and regex classifiers, so each policy dimension has to map to the corresponding request field.",
+      "solution_fit_assessment": "The approach fits the example, but omitting `WorkingDir` from `ForbiddenPaths` breaks the promised directory protection.",
+      "alternative_designs": "The guard can normalize `WorkingDir` and compare it against protected paths, or resolve both command file references and working directory against an allowed workspace root.",
+      "tradeoffs": "Path normalization may need platform-specific care, but explicit working-directory enforcement is necessary for a safety example.",
+      "design_assessment": "The policy model is readable and extensible; it needs one more enforcement point to match its declared behavior.",
+      "modules": "examples/tool_safety_guard guard, policy JSON, samples, tests, and report examples.",
+      "api_surface": "No public package API is changed; this is an example module and CLI surface.",
+      "change_inventory": "Adds policy parsing, command classification, samples, audit output, and documentation for a tool safety guard.",
+      "semantic_changes": "The example introduces allow/ask/deny classification for tool execution requests.",
+      "module_impact": "Impact is scoped to the example, but the policy pattern may be reused by agent tool wrappers.",
+      "cross_module_impact": "No core runtime packages are changed; the example models how tool requests should be screened.",
+      "behavior_impact": "A harmless command can still run inside a protected directory, which bypasses the documented forbidden path policy.",
+      "tests_docs": "Add a case where `WorkingDir` points to a protected path while the command text itself is harmless.",
+      "outcome": "Posted one inline comment requiring `WorkingDir` enforcement for forbidden paths.",
+      "ci_state": "Candidate checks were refreshed; review comments determine the current outcome.",
+      "review_action": "Posted 1 inline GitHub review comment; no approval, LGTM, request-changes review, or merge was submitted.",
+      "inline_comments": [
+        {
+          "path": "examples/tool_safety_guard/guard.go",
+          "line": 146,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2193#discussion_r3583922448",
+          "severity": "high",
+          "focus": "forbidden working directory",
+          "body": "`ForbiddenPaths` only checks `req.Command`, so `WorkingDir: \"~/.ssh\"` with a harmless command can be allowed even though the guard says it protects working directories. Normalize and check `req.WorkingDir` against `ForbiddenPaths` as well, then add a sample/test for protected working dirs.\n<details><summary>中文</summary>\n`ForbiddenPaths` 现在只检查 `req.Command`，所以即使 `WorkingDir` 是 `~/.ssh`，只要命令本身看起来无害就可能被放行，这和 guard 宣称会保护工作目录不一致。建议把 `req.WorkingDir` 规范化后也纳入 `ForbiddenPaths` 检查，并补一个受保护工作目录的样例/测试。\n</details>"
+        }
+      ],
+      "blockers": [
+        {
+          "kind": "implementation_scope",
+          "summary": "forbidden working directory: examples/tool_safety_guard/guard.go:146",
+          "path": "examples/tool_safety_guard/guard.go",
+          "line": 146,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2193#discussion_r3583922448",
+          "verification": "Comment was posted on the current PR head and recorded with its GitHub discussion URL."
+        }
+      ],
+      "risk": "forbidden working directory",
+      "merge_policy": "blocked_by_review_findings"
+    },
+    {
+      "number": 2192,
+      "title": "examples: add session replay consistency harness",
+      "url": "https://github.com/trpc-group/trpc-agent-go/pull/2192",
+      "author": "March-77",
+      "head_sha": "db2062b344b77dd5bc0397848014cde12f78df90",
+      "status": "commented",
+      "technical_background": "Replay consistency harnesses should execute the same operation sequence against multiple backends and compare loaded observable state. Saving a prebuilt final snapshot verifies serialization/comparison, not backend behavior.",
+      "problem": "The PR adds an examples/session replay consistency harness for sessions, memory, summaries, tracks, reports, and docs.",
+      "necessity_assessment": "The task is important because backend consistency bugs can hide until users switch storage implementations.",
+      "evidence_checked": "Reviewed the backend contract, replay scenario model, comparator, report output, and issue-oriented design claims before posting the inline comment.",
+      "problem_framing": "The harness currently bypasses the service APIs whose semantics it is supposed to compare.",
+      "approach": "The implementation defines snapshots, backend save/load hooks, comparators, and sample output for replay reports.",
+      "implementation_derivation": "A replay harness should derive expected state from operations, then let each backend produce actual state through the real service layer.",
+      "solution_fit_assessment": "The comparison and report shape are useful, but the backend interface needs to exercise actual session and memory APIs to satisfy the consistency goal.",
+      "alternative_designs": "Represent scenarios as operation lists and run them through adapters over `session.Service`, memory service, summary and track operations before normalization.",
+      "tradeoffs": "Operation-level replay is more code than snapshot save/load, but it catches semantic differences in create, append, update, delete, search, and persistence behavior.",
+      "design_assessment": "The report/comparator pieces are reasonable, while the backend abstraction is too high level for the stated test objective.",
+      "modules": "examples/session/replayconsistency backend contract, scenario data, comparator, report, README, and design doc.",
+      "api_surface": "No exported framework API changes; the new surface is an example module.",
+      "change_inventory": "Adds snapshot models, backend adapters, replay examples, comparison report, tests, and documentation.",
+      "semantic_changes": "The example is intended to compare backend-observable session and memory behavior across implementations.",
+      "module_impact": "Impact is scoped to examples but informs how future backend consistency checks may be written.",
+      "cross_module_impact": "The intended contract spans session, memory, summary, and track behavior even though the PR itself lives under examples.",
+      "behavior_impact": "Backends can disagree on real operations while still passing because both are handed the same final snapshot.",
+      "tests_docs": "Add operation-level cases that create sessions, append events, mutate memory, and compare loaded results.",
+      "outcome": "Posted one inline comment requiring operation-level replay through real backend APIs.",
+      "ci_state": "Candidate checks were refreshed; review comments determine the current outcome.",
+      "review_action": "Posted 1 inline GitHub review comment; no approval, LGTM, request-changes review, or merge was submitted.",
+      "inline_comments": [
+        {
+          "path": "examples/session/replayconsistency/replay.go",
+          "line": 69,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2192#discussion_r3583922603",
+          "severity": "high",
+          "focus": "operation-level replay",
+          "body": "`Save(Snapshot)` stores an already-final snapshot, so the replay only tests the comparator and not the real session/memory operation semantics from #2001. Drive each backend through the actual service APIs such as `CreateSession`, `AppendEvent`, summary/track/memory operations, then load and normalize the results for comparison.\n<details><summary>中文</summary>\n`Save(Snapshot)` 保存的是已经构造好的最终快照，这样 replay 实际只验证了 comparator，而没有覆盖 #2001 里要求的真实 session/memory 操作语义。建议让每个 backend 都通过真实 service API 执行，例如 `CreateSession`、`AppendEvent`、summary/track/memory 操作，然后再 load、normalize 并比较结果。\n</details>"
+        }
+      ],
+      "blockers": [
+        {
+          "kind": "implementation_scope",
+          "summary": "operation-level replay: examples/session/replayconsistency/replay.go:69",
+          "path": "examples/session/replayconsistency/replay.go",
+          "line": 69,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2192#discussion_r3583922603",
+          "verification": "Comment was posted on the current PR head and recorded with its GitHub discussion URL."
+        }
+      ],
+      "risk": "operation-level replay",
+      "merge_policy": "blocked_by_review_findings"
+    },
+    {
+      "number": 2191,
+      "title": "examples: add prompt optimization regression loop",
+      "url": "https://github.com/trpc-group/trpc-agent-go/pull/2191",
+      "author": "March-77",
+      "head_sha": "624d6aba3c146b05723379f8edd2600cae91bb85",
+      "status": "commented",
+      "technical_background": "Prompt optimization gates compare candidate prompts against baseline metrics and optional budgets. Optional JSON budget fields need explicit absent handling so defaults do not silently change policy.",
+      "problem": "The PR adds a prompt optimization regression loop example with datasets, candidate prompts, metrics, report output, and a deterministic pipeline.",
+      "necessity_assessment": "The example is useful for showing safe prompt iteration, but omitted budget fields must not become strict zero budgets.",
+      "evidence_checked": "Reviewed the gate config, pipeline decisions, data files, tests, and report generation before posting the inline comment.",
+      "problem_framing": "Numeric zero is both a valid configured budget and the Go zero value for an omitted JSON field, so the current gate cannot distinguish absent from explicitly configured.",
+      "approach": "The implementation loads evaluation traces, compares baseline and candidate metrics, applies gates, and emits optimization reports.",
+      "implementation_derivation": "The gate logic is derived from score deltas, critical cases, hard-failure checks, cost budgets, and tool-call budgets.",
+      "solution_fit_assessment": "The regression-loop structure fits the example, but budget fields need nullable or post-decode defaults to keep configuration semantics correct.",
+      "alternative_designs": "Use pointer fields for optional budgets, or keep value fields and fill absent values with negative disabled sentinels during config normalization.",
+      "tradeoffs": "Pointer fields make absence explicit; sentinel defaults keep call sites simple but require a clear normalization step.",
+      "design_assessment": "The deterministic pipeline is clear; optional configuration semantics need tightening.",
+      "modules": "examples/evaluation/promptiter_regression_loop pipeline, config types, data fixtures, report generation, and tests.",
+      "api_surface": "No framework API changes; the user-visible surface is the example config and CLI behavior.",
+      "change_inventory": "Adds prompt candidates, eval sets, gate logic, metrics comparison, and markdown/JSON reports.",
+      "semantic_changes": "The example decides whether a candidate prompt is accepted based on validation gain, protected regressions, failures, cost, and tool calls.",
+      "module_impact": "Impact is scoped to the example but affects readers learning how to configure prompt gates.",
+      "cross_module_impact": "No core package behavior changes; the example demonstrates evaluation workflows.",
+      "behavior_impact": "A config that omits budgets can reject otherwise valid candidates because zero is treated as an enabled limit.",
+      "tests_docs": "Add coverage for configs with absent budget fields and for explicitly configured zero budgets if that remains supported.",
+      "outcome": "Posted one inline comment requiring explicit absent handling for optional budgets.",
+      "ci_state": "Candidate checks were refreshed; review comments determine the current outcome.",
+      "review_action": "Posted 1 inline GitHub review comment; no approval, LGTM, request-changes review, or merge was submitted.",
+      "inline_comments": [
+        {
+          "path": "examples/evaluation/promptiter_regression_loop/pipeline.go",
+          "line": 246,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2191#discussion_r3583922758",
+          "severity": "medium",
+          "focus": "optional budget defaults",
+          "body": "`MaxCostIncrease` and `MaxToolCalls` decode as zero when omitted, but the `>= 0` gates then reject any cost increase or any tool calls. Make these optional pointers or set absent fields to a disabled sentinel after decoding, and enforce the budgets only when explicitly configured.\n<details><summary>中文</summary>\n`MaxCostIncrease` 和 `MaxToolCalls` 在 JSON 里省略时会解码成 0，但这里的 `>= 0` 判断会把它们当作启用预算限制，导致任何成本上涨或任何工具调用都被拒绝。建议把这些字段改成可空指针，或在解码后给缺失字段设置“禁用”哨兵值，只在用户明确配置时才执行预算门禁。\n</details>"
+        }
+      ],
+      "blockers": [
+        {
+          "kind": "implementation_scope",
+          "summary": "optional budget defaults: examples/evaluation/promptiter_regression_loop/pipeline.go:246",
+          "path": "examples/evaluation/promptiter_regression_loop/pipeline.go",
+          "line": 246,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2191#discussion_r3583922758",
+          "verification": "Comment was posted on the current PR head and recorded with its GitHub discussion URL."
+        }
+      ],
+      "risk": "optional budget defaults",
+      "merge_policy": "blocked_by_review_findings"
+    },
+    {
+      "number": 2190,
+      "title": "examples: add sandboxed code review agent",
+      "url": "https://github.com/trpc-group/trpc-agent-go/pull/2190",
+      "author": "March-77",
+      "head_sha": "4b7b3979b3a873baf6312cdd2ba0787f4cc41852",
+      "status": "commented",
+      "technical_background": "A sandboxed code review agent ingests diffs or repository changes, runs static rules, may execute checks in an isolated runtime, and emits findings. Its example value depends on matching the declared sandbox, input, and security-rule contracts.",
+      "problem": "The PR adds a sandboxed code review agent example with diff parsing, rules, container execution, storage, reports, skill files, and fixtures.",
+      "necessity_assessment": "The example can be useful, but the current implementation leaves several security and correctness holes in the advertised workflow.",
+      "evidence_checked": "Reviewed the Dockerfile, repository diff loading, secret detection rules, sandbox workspace creation, diff summary logic, and relevant codeexecutor runtime behavior before posting comments.",
+      "problem_framing": "The issues cluster around environment compatibility, incomplete input capture, insufficient secret matching, unenforced workspace limits, and inaccurate deleted-file summaries.",
+      "approach": "The implementation builds a CLI around repository/diff inputs, rule execution, optional container sandboxing, SQLite storage, and markdown/JSON reports.",
+      "implementation_derivation": "The design follows a common review-agent pipeline: normalize input, parse diff, run rules, optionally run checks, store task state, and render a report.",
+      "solution_fit_assessment": "The pipeline shape fits the goal, but the current details do not yet satisfy the safety and correctness contract of a sandboxed review example.",
+      "alternative_designs": "Use a Go version aligned with the module, synthesize diffs for untracked files, broaden secret regexes, enforce pre-copy workspace size, and count deleted-file hunks in summaries.",
+      "tradeoffs": "The fixes add validation and fixture complexity, but they prevent clean reports that miss real files or security findings.",
+      "design_assessment": "The example is comprehensive, but several boundary conditions need repair before it can be treated as a reference.",
+      "modules": "examples/code_review_agent Dockerfile, input loader, rules, container sandbox, diff parser, storage, reports, skill files, and fixtures.",
+      "api_surface": "No framework API changes; the user-visible surface is the example command and generated reports.",
+      "change_inventory": "Adds a complete example agent with sandbox runner, static rules, persistent task records, fixtures, and report artifacts.",
+      "semantic_changes": "The example introduces repository/diff review behavior and optional sandbox execution for changed code.",
+      "module_impact": "Impact is scoped to examples, with likely reuse by developers building local review automation.",
+      "cross_module_impact": "The example depends on codeexecutor workspace behavior and demonstrates integration rather than changing core runtime code.",
+      "behavior_impact": "The current version can fail in container mode, miss untracked files and short-declared secrets, copy oversized repositories before limits, and undercount deletions.",
+      "tests_docs": "Add fixtures for untracked files, short-declared secrets, deleted-file summaries, and container Go version compatibility.",
+      "outcome": "Posted five inline comments covering Go version mismatch, untracked input files, secret regex gaps, workspace size enforcement, and deleted-file summary counting.",
+      "ci_state": "Candidate checks were refreshed; review comments determine the current outcome.",
+      "review_action": "Posted 5 inline GitHub review comments; no approval, LGTM, request-changes review, or merge was submitted.",
+      "inline_comments": [
+        {
+          "path": "examples/code_review_agent/skills/code-review/sandbox/Dockerfile",
+          "line": 1,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2190#discussion_r3583922983",
+          "severity": "medium",
+          "focus": "sandbox Go version",
+          "body": "`go.mod` requires Go 1.24.0 while this sandbox image installs Go 1.23 and the runner sets `GOTOOLCHAIN=local`, so container checks can fail before the example runs. Use a Go 1.24+ base image, or lower the module directive only if the code is actually compatible.\n<details><summary>中文</summary>\n`go.mod` 要求 Go 1.24.0，但这个 sandbox 镜像安装的是 Go 1.23，而且 runner 设置了 `GOTOOLCHAIN=local`，所以 container 模式可能在示例真正运行前就失败。建议换成 Go 1.24+ 的基础镜像；如果代码确实兼容更低版本，再考虑降低 module directive。\n</details>"
+        },
+        {
+          "path": "examples/code_review_agent/internal/input.go",
+          "line": 54,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2190#discussion_r3583923135",
+          "severity": "high",
+          "focus": "untracked files",
+          "body": "`git diff HEAD --` ignores untracked files in `--repo-path` mode, so a newly created Go file with secrets or unsafe code can yield an empty clean report. Include untracked files via `git ls-files --others --exclude-standard` and synthesize diffs for them, or reject untracked files explicitly.\n<details><summary>中文</summary>\n`--repo-path` 模式下的 `git diff HEAD --` 不会包含未跟踪文件，所以新建的 Go 文件即使包含密钥或不安全代码，也可能得到空的 clean report。建议用 `git ls-files --others --exclude-standard` 收集未跟踪文件并合成 diff，或者明确拒绝存在未跟踪文件的输入。\n</details>"
+        },
+        {
+          "path": "examples/code_review_agent/internal/rules_security.go",
+          "line": 115,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2190#discussion_r3583923319",
+          "severity": "high",
+          "focus": "secret detection",
+          "body": "`:=` declarations are missed by these secret regexes, so common Go code like `apiKey := \"...\"` or `token := \"...\"` passes the required hardcoded-secret rule. Accept both `=` and `:=` in the patterns and add fixtures for short declarations.\n<details><summary>中文</summary>\n这些密钥正则没有覆盖 `:=` 短变量声明，所以常见的 Go 写法如 `apiKey := \"...\"` 或 `token := \"...\"` 会绕过必需的硬编码密钥规则。建议让模式同时支持 `=` 和 `:=`，并增加短变量声明的 fixture。\n</details>"
+        },
+        {
+          "path": "examples/code_review_agent/internal/container_sandbox.go",
+          "line": 73,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2190#discussion_r3583923442",
+          "severity": "high",
+          "focus": "workspace size enforcement",
+          "body": "`MaxDiskBytes` is passed to `CreateWorkspace`, but the container/E2B workspace runtimes currently ignore `WorkspacePolicy`, so oversized repositories are still copied before any size guard. Enforce a pre-copy size/exclusion limit in `ContainerSandbox` or use a runtime path that actually applies `MaxDiskBytes`.\n<details><summary>中文</summary>\n这里把 `MaxDiskBytes` 传给了 `CreateWorkspace`，但当前 container/E2B workspace runtime 会忽略 `WorkspacePolicy`，所以超大的仓库仍然会在大小限制生效前被复制进去。建议在 `ContainerSandbox` 里复制前先做大小/排除规则校验，或者改用真正会执行 `MaxDiskBytes` 的 runtime 路径。\n</details>"
+        },
+        {
+          "path": "examples/code_review_agent/internal/diffparser.go",
+          "line": 310,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2190#discussion_r3583923543",
+          "severity": "medium",
+          "focus": "deleted-file diff summary",
+          "body": "`DiffSummary` increments the file count for deleted files and then skips their hunks, so deleted-file reports show `-0` even when lines were removed. Count `LineRemoved` hunks for deleted files before continuing and add a deleted-file summary test.\n<details><summary>中文</summary>\n`DiffSummary` 对删除文件只增加文件数就跳过 hunk，因此即使删除了很多行，报告里也会显示 `-0`。建议在跳过前统计删除文件里的 `LineRemoved` hunk，并补一个删除文件摘要的测试。\n</details>"
+        }
+      ],
+      "blockers": [
+        {
+          "kind": "implementation_scope",
+          "summary": "sandbox Go version: examples/code_review_agent/skills/code-review/sandbox/Dockerfile:1",
+          "path": "examples/code_review_agent/skills/code-review/sandbox/Dockerfile",
+          "line": 1,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2190#discussion_r3583922983",
+          "verification": "Comment was posted on the current PR head and recorded with its GitHub discussion URL."
+        },
+        {
+          "kind": "implementation_scope",
+          "summary": "untracked files: examples/code_review_agent/internal/input.go:54",
+          "path": "examples/code_review_agent/internal/input.go",
+          "line": 54,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2190#discussion_r3583923135",
+          "verification": "Comment was posted on the current PR head and recorded with its GitHub discussion URL."
+        },
+        {
+          "kind": "implementation_scope",
+          "summary": "secret detection: examples/code_review_agent/internal/rules_security.go:115",
+          "path": "examples/code_review_agent/internal/rules_security.go",
+          "line": 115,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2190#discussion_r3583923319",
+          "verification": "Comment was posted on the current PR head and recorded with its GitHub discussion URL."
+        },
+        {
+          "kind": "implementation_scope",
+          "summary": "workspace size enforcement: examples/code_review_agent/internal/container_sandbox.go:73",
+          "path": "examples/code_review_agent/internal/container_sandbox.go",
+          "line": 73,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2190#discussion_r3583923442",
+          "verification": "Comment was posted on the current PR head and recorded with its GitHub discussion URL."
+        },
+        {
+          "kind": "implementation_scope",
+          "summary": "deleted-file diff summary: examples/code_review_agent/internal/diffparser.go:310",
+          "path": "examples/code_review_agent/internal/diffparser.go",
+          "line": 310,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2190#discussion_r3583923543",
+          "verification": "Comment was posted on the current PR head and recorded with its GitHub discussion URL."
+        }
+      ],
+      "risk": "sandbox Go version; untracked files; secret detection; workspace size enforcement; deleted-file diff summary",
+      "merge_policy": "blocked_by_review_findings"
+    }
+  ],
+  "maintained": [],
+  "blocked": [],
+  "skipped_groups": [
+    {
+      "reason": "Required check 未通过",
+      "label": "Required check 未通过",
+      "count": 9,
+      "prs": [
+        2227,
+        2225,
+        2223,
+        2220,
+        2217,
+        2163,
+        2151,
+        2137,
+        2084
+      ],
+      "items": [
+        {
+          "number": 2227,
+          "title": "fix(backwarder): drop hallucinated surface/step ids instead of failin…",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2227",
+          "author": "cuccitini0923",
+          "status": "skipped",
+          "skip_reason": "required checks 未通过或仍需作者处理。",
+          "readiness_audit": "required checks 未通过或仍需作者处理。",
+          "ci_state": "non_green=1; CLAAssistant:fail",
+          "blockers": [
+            {
+              "kind": "CI 检查",
+              "summary": "required checks 未通过或仍需作者处理。",
+              "verification": "检查状态阻塞合入；本次未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2225,
+          "title": "session/replaytest: add replay consistency testing framework",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2225",
+          "author": "BG0527",
+          "status": "skipped",
+          "skip_reason": "非通过检查：codecov/patch:fail。",
+          "readiness_audit": "非通过检查：codecov/patch:fail。",
+          "ci_state": "non_green=1; codecov/patch:fail",
+          "blockers": [
+            {
+              "kind": "CI 检查",
+              "summary": "非通过检查：codecov/patch:fail。",
+              "verification": "检查状态阻塞合入；本次未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2223,
+          "title": "internal/flow: surface structured output parse failures",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2223",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "required checks 未通过或仍需作者处理。",
+          "readiness_audit": "required checks 未通过或仍需作者处理。",
+          "ci_state": "non_green=1; codecov/patch:fail",
+          "blockers": [
+            {
+              "kind": "CI 检查",
+              "summary": "required checks 未通过或仍需作者处理。",
+              "verification": "检查状态阻塞合入；本次未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2220,
+          "title": "tool/agent: isolate AgentTool run-scoped tools",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2220",
+          "author": "Flash-LHR",
+          "status": "skipped",
+          "skip_reason": "required checks 未通过或仍需作者处理。",
+          "readiness_audit": "required checks 未通过或仍需作者处理。",
+          "ci_state": "non_green=1; codecov/patch:fail",
+          "blockers": [
+            {
+              "kind": "CI 检查",
+              "summary": "required checks 未通过或仍需作者处理。",
+              "verification": "检查状态阻塞合入；本次未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2217,
+          "title": "{plugin, runner}: add after-run hook",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2217",
+          "author": "Flash-LHR",
+          "status": "skipped",
+          "skip_reason": "required checks 未通过或仍需作者处理。",
+          "readiness_audit": "required checks 未通过或仍需作者处理。",
+          "ci_state": "non_green=3; codecov/patch:fail, go-apidiff:fail, lint:fail",
+          "blockers": [
+            {
+              "kind": "CI 检查",
+              "summary": "required checks 未通过或仍需作者处理。",
+              "verification": "检查状态阻塞合入；本次未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2163,
+          "title": "server/a2a: decouple anonymous principals from A2A context IDs",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2163",
+          "author": "XnLemon",
+          "status": "skipped",
+          "skip_reason": "非通过检查：codecov/patch:fail，CLAAssistant:fail。",
+          "readiness_audit": "非通过检查：codecov/patch:fail，CLAAssistant:fail。",
+          "ci_state": "non_green=2; codecov/patch:fail, CLAAssistant:fail",
+          "blockers": [
+            {
+              "kind": "CI 检查",
+              "summary": "非通过检查：codecov/patch:fail，CLAAssistant:fail。",
+              "verification": "检查状态阻塞合入；本次未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2151,
+          "title": "实现自动代码评审Agent全套能力",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2151",
+          "author": "xiaoyulox",
+          "status": "skipped",
+          "skip_reason": "非通过检查：go test (go.mod):fail。",
+          "readiness_audit": "非通过检查：go test (go.mod):fail。",
+          "ci_state": "non_green=1; go test (go.mod):fail",
+          "blockers": [
+            {
+              "kind": "CI 检查",
+              "summary": "非通过检查：go test (go.mod):fail。",
+              "verification": "检查状态阻塞合入；本次未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2137,
+          "title": "feat(toolsearch): refactor into namespaced toolbox with embedding search, MCP support and two-tool mode",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2137",
+          "author": "qiefengying",
+          "status": "skipped",
+          "skip_reason": "required checks 未通过或仍需作者处理。",
+          "readiness_audit": "required checks 未通过或仍需作者处理。",
+          "ci_state": "non_green=2; go-apidiff:fail, lint:fail",
+          "blockers": [
+            {
+              "kind": "CI 检查",
+              "summary": "required checks 未通过或仍需作者处理。",
+              "verification": "检查状态阻塞合入；本次未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2084,
+          "title": "feat(model/anthropic): retry streaming requests on transient transport failures",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2084",
+          "author": "sks",
+          "status": "skipped",
+          "skip_reason": "required checks 未通过或仍需作者处理。",
+          "readiness_audit": "required checks 未通过或仍需作者处理。",
+          "ci_state": "non_green=1; codecov/patch:fail",
+          "blockers": [
+            {
+              "kind": "CI 检查",
+              "summary": "required checks 未通过或仍需作者处理。",
+              "verification": "检查状态阻塞合入；本次未提交审批或合入。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "reason": "Draft 或 WIP",
+      "label": "Draft 或 WIP",
+      "count": 17,
+      "prs": [
+        2215,
+        2212,
+        2211,
+        2196,
+        2144,
+        2143,
+        2133,
+        2086,
+        2076,
+        2058,
+        2047,
+        2037,
+        2010,
+        1901,
+        1778,
+        1710,
+        1678
+      ],
+      "items": [
+        {
+          "number": 2215,
+          "title": "knowledge: keep fixed-size overlap within chunk size",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2215",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2212,
+          "title": "coderuntime: harden local Python runners",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2212",
+          "author": "bytethm",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2211,
+          "title": "processor: persist completed tool responses after deadline",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2211",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2196,
+          "title": "memory: improve automatic memory extraction reliability",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2196",
+          "author": "Rememorio",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "checked=164; non_green=0",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2144,
+          "title": "openclaw: add durable request context prompts",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2144",
+          "author": "bytethm",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2143,
+          "title": "[WIP] tool/okf: Open Knowledge Format (OKF) support",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2143",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2133,
+          "title": "agent/llmagent: continue after image URL failures",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2133",
+          "author": "bytethm",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2086,
+          "title": "fix(model/anthropic): repair truncated tool_use input before stream finalize",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2086",
+          "author": "sks",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2076,
+          "title": "feat(sandbox): add macOS denial diagnostics",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2076",
+          "author": "cuboya",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2058,
+          "title": "a2a: add v2 packages backed by trpc-a2a-go/v2 (A2A protocol v1.0)",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2058",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2047,
+          "title": "agent: add durable session context sources",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2047",
+          "author": "bytethm",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2037,
+          "title": "feat(telemetry): add invoke skill observability",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2037",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2010,
+          "title": "memory/deepsearch: add progressive DeepSearch",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2010",
+          "author": "print-happy",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 1901,
+          "title": "WIP: knowledge: deprecate legacy OCR path",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1901",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 1778,
+          "title": "examples: add RLM (Recursive Language Model) demo",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1778",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 1710,
+          "title": "a2a: add input schema",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1710",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 1678,
+          "title": "agent: centralize invoke_agent telemetry in RunWithPlugins",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1678",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP 状态，暂不进入合入评审。",
+          "readiness_audit": "Draft/WIP 状态，暂不进入合入评审。",
+          "ci_state": "not evaluated while draft",
+          "blockers": [
+            {
+              "kind": "Draft 或 WIP",
+              "summary": "Draft/WIP 状态，暂不进入合入评审。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "reason": "自有 PR 不自审",
+      "label": "自有 PR 不自审",
+      "count": 1,
+      "prs": [
+        2155
+      ],
+      "items": [
+        {
+          "number": 2155,
+          "title": "openclaw,tool: guard blocked web research routes",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2155",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "自有 PR 仅做状态检查，不由自动流程自审。",
+          "readiness_audit": "自有 PR 仅做状态检查，不由自动流程自审。",
+          "ci_state": "checked=164; non_green=0",
+          "blockers": [
+            {
+              "kind": "自有 PR",
+              "summary": "自有 PR 仅做状态检查，不由自动流程自审。",
+              "verification": "自有 PR 未执行自审、审批或合入。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "reason": "已有评论等待处理",
+      "label": "已有评论等待作者处理",
+      "count": 4,
+      "prs": [
+        2221,
+        2153,
+        2097,
+        2044
+      ],
+      "items": [
+        {
+          "number": 2221,
+          "title": "lsc: align steps with graph node visits",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2221",
+          "author": "Flash-LHR",
+          "status": "skipped",
+          "skip_reason": "已有行内评论等待作者处理；作者更新或回复后再复核。",
+          "readiness_audit": "已有行内评论等待作者处理；作者更新或回复后再复核。",
+          "ci_state": "checked=164; non_green=0",
+          "blockers": [
+            {
+              "kind": "已有反馈",
+              "summary": "已有行内评论等待作者处理；作者更新或回复后再复核。",
+              "verification": "本次未重复投递同类评论。"
+            }
+          ]
+        },
+        {
+          "number": 2153,
+          "title": "[codex] add tool execution safety guard",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2153",
+          "author": "GodBlf",
+          "status": "skipped",
+          "skip_reason": "已有行内评论等待作者处理；作者更新或回复后再复核。",
+          "readiness_audit": "已有行内评论等待作者处理；作者更新或回复后再复核。",
+          "ci_state": "checked=2; non_green=0",
+          "blockers": [
+            {
+              "kind": "已有反馈",
+              "summary": "已有行内评论等待作者处理；作者更新或回复后再复核。",
+              "verification": "本次未重复投递同类评论。"
+            }
+          ]
+        },
+        {
+          "number": 2097,
+          "title": "feat(session,tool/context): Pensieve context self-pruning with example",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2097",
+          "author": "sks",
+          "status": "skipped",
+          "skip_reason": "已有行内评论等待作者处理；作者更新或回复后再复核。",
+          "readiness_audit": "已有行内评论等待作者处理；作者更新或回复后再复核。",
+          "ci_state": "checked=164; non_green=0",
+          "blockers": [
+            {
+              "kind": "已有反馈",
+              "summary": "已有行内评论等待作者处理；作者更新或回复后再复核。",
+              "verification": "本次未重复投递同类评论。"
+            }
+          ]
+        },
+        {
+          "number": 2044,
+          "title": "feat: Tool Safety Scanner with 8 rules and structured audit",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2044",
+          "author": "Nerdlet369",
+          "status": "skipped",
+          "skip_reason": "已有行内评论等待作者处理；作者更新或回复后再复核。",
+          "readiness_audit": "已有行内评论等待作者处理；作者更新或回复后再复核。",
+          "ci_state": "checked=162; non_green=0",
+          "blockers": [
+            {
+              "kind": "已有反馈",
+              "summary": "已有行内评论等待作者处理；作者更新或回复后再复核。",
+              "verification": "本次未重复投递同类评论。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "reason": "已复核待人工确认",
+      "label": "已复核待人工确认",
+      "count": 8,
+      "prs": [
+        2226,
+        2218,
+        2214,
+        2213,
+        2205,
+        2204,
+        2183,
+        2142
+      ],
+      "items": [
+        {
+          "number": 2226,
+          "title": "tool/mcp: document ToolSet tool name prefixing",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2226",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "readiness_audit": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "ci_state": "reviewed without CI blocker in selected evidence",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "需要维护者人工确认后再继续。",
+              "verification": "本次仅记录复核结果，未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2218,
+          "title": "model: use precise GPT-5 context windows",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2218",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "readiness_audit": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "ci_state": "reviewed without CI blocker in selected evidence",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "需要维护者人工确认后再继续。",
+              "verification": "本次仅记录复核结果，未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2214,
+          "title": "model/openai: add MiniMax variant",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2214",
+          "author": "Rememorio",
+          "status": "skipped",
+          "skip_reason": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "readiness_audit": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "ci_state": "reviewed without CI blocker in selected evidence",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "需要维护者人工确认后再继续。",
+              "verification": "本次仅记录复核结果，未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2213,
+          "title": "model/openai: add Kimi variant",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2213",
+          "author": "Rememorio",
+          "status": "skipped",
+          "skip_reason": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "readiness_audit": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "ci_state": "reviewed without CI blocker in selected evidence",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "需要维护者人工确认后再继续。",
+              "verification": "本次仅记录复核结果，未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2205,
+          "title": "docs: document noop session usage",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2205",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "readiness_audit": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "ci_state": "reviewed without CI blocker in selected evidence",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "需要维护者人工确认后再继续。",
+              "verification": "本次仅记录复核结果，未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2204,
+          "title": "evolution: add reflective skill optimizer",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2204",
+          "author": "Rememorio",
+          "status": "skipped",
+          "skip_reason": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "readiness_audit": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "ci_state": "checked=164; non_green=0",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "需要维护者人工确认后再继续。",
+              "verification": "本次仅记录复核结果，未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2183,
+          "title": "test: feat replaytest harness",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2183",
+          "author": "xiaocaidie313",
+          "status": "skipped",
+          "skip_reason": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "readiness_audit": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "ci_state": "checked=164; non_green=0",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "需要维护者人工确认后再继续。",
+              "verification": "本次仅记录复核结果，未提交审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2142,
+          "title": "session/redis: add WithDisableScriptCache to run Lua scripts via EVAL",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2142",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "readiness_audit": "已完成代码复核，未发现需要新增评论的问题；后续仍需维护者人工确认处理。",
+          "ci_state": "reviewed without CI blocker in selected evidence",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "需要维护者人工确认后再继续。",
+              "verification": "本次仅记录复核结果，未提交审批或合入。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "reason": "需人工确认或已有反馈",
+      "label": "需人工确认或已有反馈",
+      "count": 9,
+      "prs": [
+        2216,
+        2198,
+        2189,
+        2186,
+        2185,
+        2157,
+        2087,
+        2050,
+        2045
+      ],
+      "items": [
+        {
+          "number": 2216,
+          "title": "evaluation: add reproducible prompt optimization regression loop",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2216",
+          "author": "gallie14",
+          "status": "skipped",
+          "skip_reason": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "readiness_audit": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "ci_state": "manual review required",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2198,
+          "title": "docs: call out the prompt-cache cost of WithAddCurrentTime and instruction placeholders",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2198",
+          "author": "lofder",
+          "status": "skipped",
+          "skip_reason": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "readiness_audit": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "ci_state": "manual review required",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2189,
+          "title": "session/replaytest：新增多后端回放一致性测试框架",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2189",
+          "author": "shsaihdsaiudh",
+          "status": "skipped",
+          "skip_reason": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "readiness_audit": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "ci_state": "manual review required",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2186,
+          "title": "examples/evaluation: add PromptIter regression loop",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2186",
+          "author": "Spock12138",
+          "status": "skipped",
+          "skip_reason": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "readiness_audit": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "ci_state": "manual review required",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2185,
+          "title": "tool/safety：新增可扩展的工具执行安全防护机制",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2185",
+          "author": "shsaihdsaiudh",
+          "status": "skipped",
+          "skip_reason": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "readiness_audit": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "ci_state": "manual review required",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2157,
+          "title": "evaluation/promptiter: add eval+optimization regression loop with aud…",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2157",
+          "author": "d2bz",
+          "status": "skipped",
+          "skip_reason": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "readiness_audit": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "ci_state": "manual review required",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2087,
+          "title": "codeexecutor/opensandbox: add OpenSandbox remote executor",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2087",
+          "author": "Violet2314",
+          "status": "skipped",
+          "skip_reason": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "readiness_audit": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "ci_state": "manual review required",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2050,
+          "title": "feat(tool/safety): add tool execution safety guard",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2050",
+          "author": "d2bz",
+          "status": "skipped",
+          "skip_reason": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "readiness_audit": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "ci_state": "manual review required",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2045,
+          "title": "feat: add tool execution safety guard",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2045",
+          "author": "everfid-ever",
+          "status": "skipped",
+          "skip_reason": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "readiness_audit": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+          "ci_state": "manual review required",
+          "blockers": [
+            {
+              "kind": "人工确认",
+              "summary": "外部贡献、项目方向或既有反馈需要维护者确认后再继续。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "reason": "等待新变化后复核",
+      "label": "等待新变化后复核",
+      "count": 44,
+      "prs": [
+        2203,
+        2202,
+        2201,
+        2187,
+        2184,
+        2179,
+        2177,
+        2176,
+        2174,
+        2173,
+        2172,
+        2169,
+        2168,
+        2167,
+        2164,
+        2162,
+        2160,
+        2156,
+        2152,
+        2146,
+        2136,
+        2135,
+        2134,
+        2128,
+        2125,
+        2124,
+        2121,
+        2118,
+        2109,
+        2090,
+        2089,
+        2088,
+        2055,
+        2051,
+        1967,
+        1957,
+        1956,
+        1930,
+        1923,
+        1801,
+        1736,
+        1446,
+        1400,
+        1183
+      ],
+      "items": [
+        {
+          "number": 2203,
+          "title": "model/openai: reduce logprob byte allocations",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2203",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2202,
+          "title": "tool/safety: add tool execution safety guard",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2202",
+          "author": "LuisQin01",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2201,
+          "title": "feat(evaluation): add PromptIter regression loop",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2201",
+          "author": "zezhen0222",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2187,
+          "title": "feat:Evaluation + Optimization pipeline",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2187",
+          "author": "zhuyanhuazhuyanhua",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2184,
+          "title": "evaluation: add PromptIter regression optimization loop",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2184",
+          "author": "xyxhhhhh",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2179,
+          "title": "openclaw: keep yielded exec sessions alive",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2179",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2177,
+          "title": "Feat/code review agent",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2177",
+          "author": "Violet2314",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2176,
+          "title": "tool/arxivsearch: limit PDF content results",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2176",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2174,
+          "title": "tool/safety: add tool execution safety guard",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2174",
+          "author": "xyxhhhhh",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2173,
+          "title": "openclaw/subagentrun: allow sync spawn without delivery",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2173",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2172,
+          "title": "openclaw/imageinspect: tolerate duplicated attachment paths",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2172",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2169,
+          "title": "openclaw/browser: support server act targets",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2169",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2168,
+          "title": "openclaw/app: sanitize MCP image tool messages",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2168",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2167,
+          "title": "openclaw/app: require visible final answer on budget finalization",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2167",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2164,
+          "title": "evaluation: add evaluation + prompt optimization regression loop",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2164",
+          "author": "everfid-ever",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2162,
+          "title": "openclaw/app: finalize near request deadline",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2162",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2160,
+          "title": "test: add session memory replay consistency harness",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2160",
+          "author": "xyxhhhhh",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2156,
+          "title": "agent,openclaw: repair text-form tool calls",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2156",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2152,
+          "title": "构建 Evaluation + Optimization 自动回归闭环",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2152",
+          "author": "GodBlf",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2146,
+          "title": "[codex] add replay consistency harness",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2146",
+          "author": "GodBlf",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2136,
+          "title": "tool/safety: add pre-execution safety scanner",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2136",
+          "author": "XnLemon",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2135,
+          "title": "feat(examples/skills_code_review_agent): add static Go code review agent",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2135",
+          "author": "Lfan-ke",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2134,
+          "title": "test: add replay consistency harness",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2134",
+          "author": "Spock12138",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2128,
+          "title": "memory/gorm: GORM-backed memory.Service with shared DB injection",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2128",
+          "author": "sks",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2125,
+          "title": "codeexecutor, agent/llmagent: make workspace registry pluggable via WorkspaceAcquirer",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2125",
+          "author": "grignolalouis",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2124,
+          "title": "tool/file: handle nil list and search requests",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2124",
+          "author": "ahfoysal",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2121,
+          "title": "examples/code_review_agent: add sandboxed code review agent example",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2121",
+          "author": "XnLemon",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2118,
+          "title": "feat: add Tool Execution Safety Guard for pre-execution command scanning #2002",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2118",
+          "author": "xiaobaicai66695",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2109,
+          "title": "memoryutils: export helpers and adopt in built-in backends",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2109",
+          "author": "sks",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2090,
+          "title": "feat(examples): add code review agent with skill, sandbox, and database storage",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2090",
+          "author": "coder-mtj",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2089,
+          "title": "feat(tool): add pre-execution safety scanner with OTel integration",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2089",
+          "author": "coder-mtj",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2088,
+          "title": "feat(session): add multi-backend replay consistency test framework",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2088",
+          "author": "coder-mtj",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2055,
+          "title": "feat: 新增会话回放一致性测试工具链",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2055",
+          "author": "mingri31164",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 2051,
+          "title": "session/replaytest: add multi-backend replay consistency test framework",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2051",
+          "author": "xiaosansh",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 1967,
+          "title": "fix(sqlite): allow WithAsyncSummaryNum(0) to disable async workers",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1967",
+          "author": "YellowDusk04",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 1957,
+          "title": "fix(session/postgres): cast JSON bytes to string for DB params",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1957",
+          "author": "Ocyss",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 1956,
+          "title": "langfuse: add environment config option and pass to OTEL resource attributes",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1956",
+          "author": "Ocyss",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 1930,
+          "title": "fix: set default HTTP client timeout to prevent goroutine leaks",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1930",
+          "author": "123456wda",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 1923,
+          "title": "fix(codeexecutor): honor CleanEnv in e2b runtime",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1923",
+          "author": "yu-xin-c",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 1801,
+          "title": "docs/mkdocs/zh/fix/agent.md: fix typo",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1801",
+          "author": "GongNanyue",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 1736,
+          "title": "all: add deferred tool set",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1736",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 1446,
+          "title": "feat(a2a): add StructuredOutput → DataPart converter for custom event…",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1446",
+          "author": "SummerLv",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 1400,
+          "title": "{artifact, codeexectutor}: add Head method for artifact service to retrieve 状态信息 without loading content",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1400",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        },
+        {
+          "number": 1183,
+          "title": "internal/util: add util for streaming parsing of JSON returned by LLM",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1183",
+          "author": "hongxiuzhe",
+          "status": "skipped",
+          "skip_reason": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "readiness_audit": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+          "ci_state": "status recorded",
+          "blockers": [
+            {
+              "kind": "等待新变化",
+              "summary": "已纳入本次全量台账，当前没有新的高优先级触发信号。",
+              "verification": "本次台账已记录该状态；未执行审批或合入。"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "follow_up": [
+    {
+      "title": "作者更新后复核",
+      "reason": "已评论 PR 需要等待作者修复或回复后再重新跑候选复核。",
+      "next": "#2222/#2193/#2192/#2191/#2190 进入下一轮优先复核。"
+    },
+    {
+      "title": "自有 PR 状态",
+      "reason": "#2155 当前不做自审合入；若后续出现可自动处理的冲突，再走自动修复路径。",
+      "next": "继续只做状态检查和冲突预警。"
+    }
+  ],
+  "timeline": [
+    {
+      "time": "2026-07-15 09:28 CST",
+      "event": "同步 MyCR 仓库，结果为已是最新。"
+    },
+    {
+      "time": "2026-07-15 09:31 CST",
+      "event": "刷新 trpc-agent-go 远端状态并获取 97 个 open PR。"
+    },
+    {
+      "time": "2026-07-15 09:36 CST",
+      "event": "对 16 个增量候选刷新 PR 元数据和检查状态。"
+    },
+    {
+      "time": "2026-07-15 09:47 CST",
+      "event": "完成候选复核，筛出 5 个需要提交行内评论的 PR。"
+    },
+    {
+      "time": "2026-07-15 09:54 CST",
+      "event": "提交 11 条 inline comments，未执行审批或合入。"
+    },
+    {
+      "time": "2026-07-15 09:56 CST",
+      "event": "生成全量报告并准备质量校验、归档和公开 HTML。"
+    }
+  ],
+  "skill_evolution": [
+    {
+      "area": "状态采集",
+      "note": "`gh pr checks --json conclusion` 字段不再可用，本次改用 `name,workflow,state,bucket,completedAt,startedAt,link`；后续应把受支持字段固化到脚本里，避免人工重跑。"
+    },
+    {
+      "area": "复核排队",
+      "note": "并行复核配额不足时，候选 #2183 回退到本地主流程复核；后续应增加队列化调度，完成一个候选后自动补位。"
+    },
+    {
+      "area": "报告完整性",
+      "note": "报告继续强制 processed 与 skipped 覆盖全部 open PR，并把评论 URL、跳过原因、后续动作放入 HTML 可见区域。"
+    },
+    {
+      "area": "公开报告卫生",
+      "note": "公共报告归档前继续执行内部诊断词扫描，避免把本地环境、运行缓存或内部调度信息展示给维护者页面。"
+    }
+  ]
+}
