@@ -1,0 +1,2127 @@
+{
+  "title": "MyCR 全量巡检报告 2026-07-16 17:19",
+  "repo": "trpc-group/trpc-agent-go",
+  "generated_at": "2026-07-16T17:19:44+08:00",
+  "repo_info": {
+    "repo": "trpc-group/trpc-agent-go",
+    "open_prs": 97,
+    "heavy_reviewed": 33,
+    "carry_forward": 64,
+    "commented": 5,
+    "approved": 0,
+    "maintained": 0,
+    "blocked": 0,
+    "skipped": 92,
+    "added_prs": [
+      2244,
+      2243,
+      2242,
+      2241,
+      2240,
+      2238
+    ],
+    "removed_prs": [
+      2236,
+      2214,
+      2213,
+      2109
+    ]
+  },
+  "overview": "本次完成 MyCR 仓库同步和 trpc-agent-go open PR 全量台账刷新：当前 open PR 共 97 个，较上一份报告增加 2 个净增量；新进入台账 6 个，移出 4 个。深入复核覆盖 33 个需要重新判断的 PR，沿用 64 个未变化 PR 的上一轮结论；最终在 #2243、#2238、#2225、#2222、#2163 上提交 11 条 inline comments，没有提交 approval、request-changes review、LGTM 或 merge。当前 4 个 required checks 未通过，17 个 Draft/WIP 暂缓，12 个自有 PR 只做状态和冲突检查，0 个已有反馈等待处理，55 个已复核待人工确认。自有 PR 未发现 CONFLICTING 状态，需要继续关注 #2234 的 codecov/patch 软门禁。",
+  "timeline": [
+    {
+      "label": "仓库同步",
+      "detail": "MyCR 仓库已同步到最新 main，目标仓库保留既有本地改动并通过远端 refs 做只读复核。"
+    },
+    {
+      "label": "台账刷新",
+      "detail": "刷新 97 个 open PR，生成 33 个深入复核候选和 64 个状态沿用项。"
+    },
+    {
+      "label": "评论提交",
+      "detail": "在 5 个 PR 上提交 11 条 inline comments，并逐条确认评论由当前 GitHub 账号直接发出。"
+    },
+    {
+      "label": "报告归档",
+      "detail": "报告数据保留下一轮所需状态，公共页面只展示维护者需要的审计事实。"
+    }
+  ],
+  "approved": [],
+  "commented": [
+    {
+      "number": 2243,
+      "title": "feat(examples): add skills-based code review agent",
+      "url": "https://github.com/trpc-group/trpc-agent-go/pull/2243",
+      "author": "xyxhhhhh",
+      "status": "commented",
+      "head_sha": "b854a8a37cffa75009737f73df3c06aa13c856c6",
+      "technical_background": "The skills-based code-review example is meant to demonstrate a reproducible local review pipeline with rule-only defaults, optional model review, sandbox execution, and committed sample reports that contributors can trust as the documented contract.",
+      "problem": "The change adds useful configuration and reporting pieces, but the YAML default path can unexpectedly enable model-backed review, and the checked-in sample report no longer matches the renderer output.",
+      "problem_framing": "Example tooling must be copy-paste safe: omitting optional model fields should keep deterministic behavior, and committed artifacts should reflect the actual report shape.",
+      "root_cause": "A zero-value bool from YAML overwrites the CLI default, while generated output files were not regenerated after the artifact retention and bilingual report changes.",
+      "approach": "The PR extends the example agent with config loading, model review hooks, and report artifacts for a skills-driven code review workflow.",
+      "implementation_derivation": "The affected paths sit at the command config boundary and committed output boundary, so stale defaults or artifacts directly change how new users run and validate the example.",
+      "solution_fit_assessment": "The overall direction fits the example, but the defaulting and artifact contract need correction before the example can be treated as reliable documentation.",
+      "alternative_designs": "Use pointer booleans or explicit presence tracking for YAML overrides, and regenerate examples through a single checked command that also updates container-smoke outputs.",
+      "tradeoffs": "Preserving rule-only defaults keeps local runs deterministic, while still allowing model review when the config explicitly opts into it.",
+      "design_assessment": "The design is workable once defaults and sample artifacts are made deterministic.",
+      "modules": "examples/skills_code_review_agent command, config, output samples, and smoke artifacts",
+      "api_surface": "Example CLI/config behavior and committed output contract; no core library API change.",
+      "change_inventory": "Adds a skills code-review example with configuration, report output, and sample artifacts.",
+      "semantic_changes": "Minimal YAML config can currently change execution mode from rule-only to model-backed review.",
+      "module_impact": "The example may call a model unexpectedly or show report shapes that the current renderer no longer emits.",
+      "cross_module_impact": "Docs and contributor examples inherit these defaults and artifacts as the reference workflow.",
+      "behavior_impact": "Users running the example from YAML can see unexpected model setup failures, and readers comparing reports see mismatched artifacts.",
+      "tests_docs": "Needs a config-default regression and regenerated sample/container-smoke outputs.",
+      "necessity_assessment": "useful_example_but_contract_must_match: the example is valuable, but defaults and artifacts need to be stable before maintainers can rely on it.",
+      "issue_evidence_gaps": "The review did not rerun the full example matrix locally; findings are derived from the current diff and committed output contract.",
+      "evidence_checked": "Current PR head b854a8a37cffa75009737f73df3c06aa13c856c6, changed files, refreshed checks where available, existing review comments, and the current diff for every posted line.",
+      "reproduction_on_base": "Full runtime reproduction was not executed locally; the finding is grounded in current code paths and documented contracts.",
+      "outcome": "2 inline comments posted on the current head.",
+      "risk": "Maintainers should keep the PR unmerged until the posted findings are addressed and checks are clean.",
+      "ci_state": "Current effective checks refreshed: 162 checks, non-green=0.",
+      "inline_comments": [
+        {
+          "path": "examples/skills_code_review_agent/cmd/review-agent/main.go",
+          "line": 136,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2243#discussion_r3594296951",
+          "severity": "medium",
+          "focus": "YAML rule_only default flips to model-backed review",
+          "body": "Omitting `model.rule_only` from YAML currently flips the config to model-backed review because the unmarshaled bool defaults to `false`. Preserve the CLI default (`rule_only=true`) unless YAML explicitly sets this field, otherwise minimal configs can unexpectedly call a real model or report an LLM setup failure.\n\n<details><summary>中文</summary>\nYAML 里省略 `model.rule_only` 时，现在会因为 bool 零值变成 `false`，从而意外启用模型评审。请在 YAML 明确设置该字段时才覆盖 CLI 默认值（`rule_only=true`），否则最小配置可能会意外调用真实模型，或产生 LLM 配置失败的人工复核项。\n</details>"
+        },
+        {
+          "path": "examples/skills_code_review_agent/output/review_report.json",
+          "line": 136,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2243#discussion_r3594297594",
+          "severity": "high",
+          "focus": "sample report outputs are stale",
+          "body": "This sample report is stale relative to the current renderer: the code and golden output now retain five artifacts and include `review_diagnostics.json` plus `review_report.zh.md`. Regenerate the tracked sample outputs, including the container-smoke samples, so the delivered reports match the documented output shape.\n\n<details><summary>中文</summary>\n这个示例报告已经和当前渲染逻辑不一致：代码和 golden 输出现在保留 5 个 artifact，并包含 `review_diagnostics.json` 与 `review_report.zh.md`。请重新生成已提交的示例输出，包括 container-smoke 样例，确保交付报告和文档描述一致。\n</details>"
+        }
+      ],
+      "attention_points": [
+        "examples/skills_code_review_agent/cmd/review-agent/main.go:136 YAML rule_only default flips to model-backed review",
+        "examples/skills_code_review_agent/output/review_report.json:136 sample report outputs are stale"
+      ],
+      "review_action": "Posted 2 inline GitHub comments; no approval, request-changes review, LGTM label, or merge was submitted.",
+      "merge_policy": "blocked_by_review_findings"
+    },
+    {
+      "number": 2238,
+      "title": "{agent/codex, docs}: stream Codex JSONL events",
+      "url": "https://github.com/trpc-group/trpc-agent-go/pull/2238",
+      "author": "Flash-LHR",
+      "status": "commented",
+      "head_sha": "85429e4f4ac306f9831a5a4c1248d0838fc40bc6",
+      "technical_background": "The Codex agent streams transcript JSONL events into runner events while also persisting final model responses for session replay and resume. Partial-event marking separates live UI updates from durable assistant turns.",
+      "problem": "Streamed assistant transcript events are emitted as non-final responses without the partial marker, so session persistence can store them and then store the final assistant response again.",
+      "problem_framing": "Streaming should improve observability without changing the durable conversation history seen by resume or replay.",
+      "root_cause": "The transcript helper sets `Done=false` but leaves the response persistability flags indistinguishable from a normal assistant response for the runner persistence predicate.",
+      "approach": "The PR adds Codex JSONL event streaming and transcript-to-event conversion for assistant messages and other records.",
+      "implementation_derivation": "The issue follows directly from the event construction path and the runner predicate that persists any valid non-partial response.",
+      "solution_fit_assessment": "Streaming transcript events is the right layer, but these live updates need to be marked partial or excluded from persistence.",
+      "alternative_designs": "Set `IsPartial` on streamed transcript responses, introduce a transcript-only event kind, or filter these events in the Codex runner before session storage.",
+      "tradeoffs": "Marking stream events partial keeps persistence clean, while transcript-only events may require more UI handling.",
+      "design_assessment": "The design fits the agent, but persistence semantics need one explicit boundary.",
+      "modules": "agent/codex transcript conversion and runner event persistence",
+      "api_surface": "Codex agent event stream semantics; no exported Go API change.",
+      "change_inventory": "Adds streamed JSONL handling for Codex assistant transcript events.",
+      "semantic_changes": "Live assistant transcript messages can become durable assistant turns.",
+      "module_impact": "Resume and replay can show duplicated assistant content for streamed Codex sessions.",
+      "cross_module_impact": "Session services and downstream UIs that rely on persisted responses inherit the duplicate turn.",
+      "behavior_impact": "Users may see one assistant answer twice after replay/resume when streaming was enabled.",
+      "tests_docs": "Needs a persistence regression for streamed transcript plus final response.",
+      "necessity_assessment": "useful_streaming_feature_with_persistence_bug: event streaming is useful, but durable history must remain single-source.",
+      "issue_evidence_gaps": "The review did not run an end-to-end Codex session; the finding is derived from the current transcript event and persistence predicates.",
+      "evidence_checked": "Current PR head 85429e4f4ac306f9831a5a4c1248d0838fc40bc6, changed files, refreshed checks where available, existing review comments, and the current diff for every posted line.",
+      "reproduction_on_base": "Full runtime reproduction was not executed locally; the finding is grounded in current code paths and documented contracts.",
+      "outcome": "1 inline comment posted on the current head.",
+      "risk": "Maintainers should keep the PR unmerged until the posted findings are addressed and checks are clean.",
+      "ci_state": "Current effective checks refreshed: 164 checks, non-green=1; examples: codecov/patch=FAILURE.",
+      "inline_comments": [
+        {
+          "path": "agent/codex/transcript.go",
+          "line": 302,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2238#discussion_r3594339213",
+          "severity": "medium",
+          "focus": "streamed assistant messages can be persisted twice",
+          "body": "Streamed `agent_message` events are emitted with `Done=false` but not marked partial, so `shouldPersistEvent` treats them as persistable assistant responses and then persists the final response again. Mark these transcript-stream events as partial, or otherwise exclude them from session persistence, to avoid duplicating assistant turns on replay/resume.\n\n<details><summary>中文</summary>\n流式 `agent_message` 事件现在只设置了 `Done=false`，但没有标记为 partial，因此 `shouldPersistEvent` 会把它当成可持久化的 assistant response，后面最终 response 又会再持久化一次。请把这类 transcript stream 事件标记为 partial，或用其他方式排除在 session 持久化之外，避免 replay/resume 时重复出现 assistant turn。\n</details>"
+        }
+      ],
+      "attention_points": [
+        "agent/codex/transcript.go:302 streamed assistant messages can be persisted twice"
+      ],
+      "review_action": "Posted 1 inline GitHub comment; no approval, request-changes review, LGTM label, or merge was submitted.",
+      "merge_policy": "blocked_by_review_findings"
+    },
+    {
+      "number": 2225,
+      "title": "session/replaytest: add replay consistency testing framework",
+      "url": "https://github.com/trpc-group/trpc-agent-go/pull/2225",
+      "author": "BG0527",
+      "status": "commented",
+      "head_sha": "3ab9aaf4da8e33f33e0fc89af4531d537fc40731",
+      "technical_background": "The session replay test harness compares behavior across storage backends and golden traces. Its allowlist, state snapshots, and documentation commands define whether backend differences are actionable or expected.",
+      "problem": "Several comparison paths still ignore merged allowlists or duplicate scoped-state diffs, and the documented commands use the wrong Go module root.",
+      "problem_framing": "A replay framework is only useful if expected backend differences are consistently allowed and contributors can run the documented tests unchanged.",
+      "root_cause": "The harness merges allowlists for one comparison path but not golden or parallel paths, and it adds a second scoped-state comparison even though the generic snapshot compare already walks those fields.",
+      "approach": "The PR introduces a replay consistency framework with backends, snapshots, golden traces, and README-driven integration commands.",
+      "implementation_derivation": "The failing behaviors all sit in shared harness code, so one inconsistent allowlist or duplicate comparison affects every backend case.",
+      "solution_fit_assessment": "The framework direction is useful, but the comparison contract needs to be internally consistent before it can gate backend compatibility.",
+      "alternative_designs": "Centralize allowlist merging once per case, feed the merged value to every comparison path, and choose either generic snapshot comparison or dedicated scoped-state comparison, not both.",
+      "tradeoffs": "Centralization reduces local flexibility but prevents path-specific false positives and duplicated report entries.",
+      "design_assessment": "The design is promising but currently produces avoidable false positives in common replay scenarios.",
+      "modules": "session/replaytest harness, golden trace comparison, parallel suite runner, and README examples",
+      "api_surface": "Replay harness behavior and documentation commands for the nested module.",
+      "change_inventory": "Adds replay cases, backend comparison logic, golden trace support, and contributor documentation.",
+      "semantic_changes": "Case-level allowed diffs can be ignored in golden or parallel paths, and one scoped-state mismatch can be reported twice.",
+      "module_impact": "Backend replay tests can fail for differences the case explicitly allowed.",
+      "cross_module_impact": "Storage/session backend maintainers may get noisy replay failures across Redis, SQL, and other adapters.",
+      "behavior_impact": "Parallel suites can disagree with serial suites, and README commands fail when run from the repository root.",
+      "tests_docs": "Needs golden allowlist, parallel allowlist, scoped-state duplication, and module-local command coverage.",
+      "necessity_assessment": "valuable_framework_with_false_positive_risk: replay testing is useful, but these inconsistencies would make maintainers distrust the results.",
+      "issue_evidence_gaps": "The full backend matrix was not executed locally; findings come from current harness code and module layout.",
+      "evidence_checked": "Current PR head 3ab9aaf4da8e33f33e0fc89af4531d537fc40731, changed files, refreshed checks where available, existing review comments, and the current diff for every posted line.",
+      "reproduction_on_base": "Full runtime reproduction was not executed locally; the finding is grounded in current code paths and documented contracts.",
+      "outcome": "4 inline comments posted on the current head.",
+      "risk": "Maintainers should keep the PR unmerged until the posted findings are addressed and checks are clean.",
+      "ci_state": "Current effective checks refreshed: 164 checks, non-green=0.",
+      "inline_comments": [
+        {
+          "path": "session/replaytest/harness.go",
+          "line": 423,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2225#discussion_r3594336535",
+          "severity": "high",
+          "focus": "golden trace comparison ignores per-case allowlist",
+          "body": "The golden-trace comparison ignores the merged `allowed` list and uses only `h.Allowed`, so per-case `AllowedDiffs` still fail when compared against a saved golden trace. Pass the merged allowlist here as well so golden regression checks behave the same as backend comparisons.\n\n<details><summary>中文</summary>\ngolden trace 对比这里没有使用已经合并好的 `allowed`，而是只用了 `h.Allowed`，所以 case 级别的 `AllowedDiffs` 在和已保存 golden trace 对比时仍会报错。这里也请传入合并后的 allowlist，保证 golden 回归检查和 backend 对比行为一致。\n</details>"
+        },
+        {
+          "path": "session/replaytest/harness.go",
+          "line": 744,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2225#discussion_r3594337298",
+          "severity": "high",
+          "focus": "parallel suite drops harness-level allowlist",
+          "body": "Parallel `RunSuite` drops harness-level allowed diffs by assigning only `c.AllowedDiffs` to the per-case harness. Merge `h.Allowed` with the case overrides before constructing `caseHarness`, otherwise allowed global backend differences start failing only when the suite runs in parallel.\n\n<details><summary>中文</summary>\n并行 `RunSuite` 构造 per-case harness 时只赋了 `c.AllowedDiffs`，把 harness 级别的 allowlist 丢掉了。请先合并 `h.Allowed` 和 case 级覆盖再构造 `caseHarness`，否则全局允许的 backend 差异会只在并行执行路径下失败。\n</details>"
+        },
+        {
+          "path": "session/replaytest/harness.go",
+          "line": 371,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2225#discussion_r3594337983",
+          "severity": "medium",
+          "focus": "scoped-state diffs are duplicated",
+          "body": "`Compare` already walks the full `Snapshot`, including `app_state` and `user_state`, so the extra scoped-state comparison appends duplicate diffs for the same mismatches. Remove this second pass or exclude scoped state from the generic compare path so one real mismatch produces one report entry.\n\n<details><summary>中文</summary>\n`Compare` 已经会遍历完整 `Snapshot`，包括 `app_state` 和 `user_state`，这里再额外做 scoped-state comparison 会把同一个差异重复追加一次。请删除第二遍比较，或让通用比较路径排除 scoped state，保证一个真实差异只产生一条报告项。\n</details>"
+        },
+        {
+          "path": "session/replaytest/README-en.md",
+          "line": 108,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2225#discussion_r3594338648",
+          "severity": "medium",
+          "focus": "documented commands use the wrong module root",
+          "body": "These docs still use the root-level `go test ./session/replaytest/` command, but this package is in its own Go module. Please switch the examples to `cd session/replaytest && go test ./...` or another module-local command so contributors can copy-paste them successfully.\n\n<details><summary>中文</summary>\n这里的文档仍然使用根目录下的 `go test ./session/replaytest/`，但这个 package 是独立 Go module。请改成 `cd session/replaytest && go test ./...`，或其他 module-local 命令，保证贡献者可以直接复制执行。\n</details>"
+        }
+      ],
+      "attention_points": [
+        "session/replaytest/harness.go:423 golden trace comparison ignores per-case allowlist",
+        "session/replaytest/harness.go:744 parallel suite drops harness-level allowlist",
+        "session/replaytest/harness.go:371 scoped-state diffs are duplicated",
+        "session/replaytest/README-en.md:108 documented commands use the wrong module root"
+      ],
+      "review_action": "Posted 4 inline GitHub comments; no approval, request-changes review, LGTM label, or merge was submitted.",
+      "merge_policy": "blocked_by_review_findings"
+    },
+    {
+      "number": 2222,
+      "title": "tes:Feat cr agent",
+      "url": "https://github.com/trpc-group/trpc-agent-go/pull/2222",
+      "author": "xiaocaidie313",
+      "status": "commented",
+      "head_sha": "33135233b0e4064ce977f375ba2345a328b29ad2",
+      "technical_background": "The code-review-agent example runs untrusted or semi-trusted repository checks, stores diagnostics, and can optionally call a model; permission accounting and redaction are therefore part of its safety boundary.",
+      "problem": "The pipeline records synthetic permission denials, persists raw sandbox output, and sends the unredacted diff to real model review.",
+      "problem_framing": "A review tool cannot claim safe artifacts if counters include fake events or if raw command/model inputs can leak secrets into reports and storage.",
+      "root_cause": "Permission planning is seeded with placeholder high-risk commands, while redaction is applied after sandbox and model input boundaries instead of before persistence and prompt construction.",
+      "approach": "The PR builds a larger code-review example with sandbox checks, SQLite/report persistence, and optional model review.",
+      "implementation_derivation": "The risky paths are the command-planning, report-storage, and model-prompt seams where untrusted repository content crosses into durable artifacts or external calls.",
+      "solution_fit_assessment": "The architecture can work, but safety-sensitive boundaries need to be corrected before the example is broadly usable.",
+      "alternative_designs": "Record permission decisions only for real planned commands, redact sandbox outputs before storage, and derive model prompts from a redacted diff representation.",
+      "tradeoffs": "Stricter redaction can reduce diagnostic detail, but it keeps artifacts and external calls aligned with the tool safety promise.",
+      "design_assessment": "The feature set is ambitious, yet the current persistence and prompt boundaries are too permissive.",
+      "modules": "examples/skills_code_review_agent sandbox runner, pipeline persistence, and LLM review package",
+      "api_surface": "Example CLI/report behavior and stored artifact schema; no core package API change.",
+      "change_inventory": "Adds sandbox command planning, permission accounting, durable review artifacts, and model review support.",
+      "semantic_changes": "Reports can currently contain artificial deny counts and raw unredacted command output or diff content.",
+      "module_impact": "Operators may misread permission-deny metrics, and artifacts may retain sensitive data emitted by checks.",
+      "cross_module_impact": "The example is likely to be copied into future skills or CI flows, so unsafe defaults can propagate.",
+      "behavior_impact": "Clean runs can look blocked by fake denials, and real LLM mode can receive content that the report layer would otherwise redact.",
+      "tests_docs": "Needs tests for real denied commands, sandbox-output redaction, and redacted model prompt construction.",
+      "necessity_assessment": "important_but_needs_safety_fixes: the example addresses a real workflow, but redaction and accounting defects must be fixed first.",
+      "issue_evidence_gaps": "The review did not execute arbitrary sandbox commands; the findings are static checks against the current persistence and prompt-building paths.",
+      "evidence_checked": "Current PR head 33135233b0e4064ce977f375ba2345a328b29ad2, changed files, refreshed checks where available, existing review comments, and the current diff for every posted line.",
+      "reproduction_on_base": "Full runtime reproduction was not executed locally; the finding is grounded in current code paths and documented contracts.",
+      "outcome": "3 inline comments posted on the current head.",
+      "risk": "Maintainers should keep the PR unmerged until the posted findings are addressed and checks are clean.",
+      "ci_state": "Current effective checks refreshed: 162 checks, non-green=0.",
+      "inline_comments": [
+        {
+          "path": "examples/skills_code_review_agent/internal/sandbox/runner.go",
+          "line": 185,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2222#discussion_r3594298249",
+          "severity": "high",
+          "focus": "synthetic denied commands inflate permission counts",
+          "body": "`buildPlannedCommands` records synthetic high-risk commands on every run, so clean reviews persist fake denials and inflate `permission_deny_count`. Build permission records only from commands the pipeline actually intends to run, and cover real denied commands with a targeted test.\n\n<details><summary>中文</summary>\n`buildPlannedCommands` 每次运行都会记录虚构的高风险命令，导致干净审查也会落库假的 deny，并抬高 `permission_deny_count`。请只为流水线真实计划执行的命令记录权限决策，并用真实被拒命令补一个针对性测试。\n</details>"
+        },
+        {
+          "path": "examples/skills_code_review_agent/internal/pipeline/pipeline.go",
+          "line": 213,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2222#discussion_r3594298841",
+          "severity": "high",
+          "focus": "sandbox output is persisted without redaction",
+          "body": "Sandbox stdout/stderr are persisted without redaction, so a test or check that prints a token can leak it into both reports and SQLite artifacts. Redact these fields before building report/storage summaries, or omit raw sandbox output from persisted artifacts.\n\n<details><summary>中文</summary>\nsandbox 的 stdout/stderr 会未脱敏地写入报告和 SQLite artifact，所以测试或检查脚本一旦打印 token，就会绕过报告与数据库的脱敏承诺。请在构造报告/存储摘要前脱敏这些字段，或不要持久化原始 sandbox 输出。\n</details>"
+        },
+        {
+          "path": "examples/skills_code_review_agent/internal/llmreview/review.go",
+          "line": 155,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2222#discussion_r3594299387",
+          "severity": "high",
+          "focus": "LLM prompt uses unredacted raw diff",
+          "body": "Real LLM mode sends `opts.DiffRaw` to the model before redaction, so a diff containing a new API key or password is transmitted externally. Redact secret values before building the prompt, or require an explicit opt-in for unredacted external LLM review.\n\n<details><summary>中文</summary>\n真实 LLM 模式会在脱敏前把 `opts.DiffRaw` 发给模型，因此包含新 API key 或 password 的 diff 会被外发。请在构造 prompt 前脱敏敏感值，或要求用户显式选择允许未脱敏内容进入外部 LLM 审查。\n</details>"
+        }
+      ],
+      "attention_points": [
+        "examples/skills_code_review_agent/internal/sandbox/runner.go:185 synthetic denied commands inflate permission counts",
+        "examples/skills_code_review_agent/internal/pipeline/pipeline.go:213 sandbox output is persisted without redaction",
+        "examples/skills_code_review_agent/internal/llmreview/review.go:155 LLM prompt uses unredacted raw diff"
+      ],
+      "review_action": "Posted 3 inline GitHub comments; no approval, request-changes review, LGTM label, or merge was submitted.",
+      "merge_policy": "blocked_by_review_findings"
+    },
+    {
+      "number": 2163,
+      "title": "server/a2a: decouple anonymous principals from A2A context IDs",
+      "url": "https://github.com/trpc-group/trpc-agent-go/pull/2163",
+      "author": "XnLemon",
+      "status": "commented",
+      "head_sha": "392af7530e8b7869281771228734fe379ffb361a",
+      "technical_background": "The A2A anonymous principal flow stores a remote cookie-backed identity per local session so separate runner calls can continue the same remote conversation without exposing cookies through public event deltas.",
+      "problem": "The new initialization lock is keyed by the cloned session pointer, so parallel first calls for the same persisted session can still acquire separate anonymous cookies.",
+      "problem_framing": "The fix must protect the logical persisted session identity, not just one in-memory clone produced by a single runner call.",
+      "root_cause": "Normal runner/session-service flows may load separate `*session.Session` instances for the same logical session, and pointer identity does not collapse those clones into one lock scope.",
+      "approach": "The PR decouples anonymous A2A principals from context IDs and adds session-scoped cookie handling plus initialization locking.",
+      "implementation_derivation": "The race sits in the lock key for the exact critical section that should serialize first-cookie acquisition.",
+      "solution_fit_assessment": "The direction is correct, but the lock key must use durable session identity and reload or share the cookie inside the lock.",
+      "alternative_designs": "Key by app/user/session plus cookie scope, or place the initialization guard in the session service layer where persisted state can be re-read atomically.",
+      "tradeoffs": "A durable key can serialize more calls than pointer identity, but it is the necessary scope for principal consistency.",
+      "design_assessment": "The design addresses the right problem but still has a first-call concurrency hole.",
+      "modules": "agent/a2aagent anonymous client and session cookie state handling",
+      "api_surface": "Internal A2A agent behavior; public user-facing conversation continuity is affected.",
+      "change_inventory": "Updates anonymous cookie capture, storage, and initialization locking around A2A client creation.",
+      "semantic_changes": "Parallel first runs for the same persisted session can still create different remote principals.",
+      "module_impact": "A single local session may split into multiple remote anonymous identities under concurrency.",
+      "cross_module_impact": "Runner and session-service callers that clone sessions can bypass the intended per-session lock.",
+      "behavior_impact": "Users can observe inconsistent remote A2A memory or context after concurrent initial calls.",
+      "tests_docs": "Needs a regression with two separate runner calls loading the same persisted session concurrently.",
+      "necessity_assessment": "necessary_principal_isolation_fix_with_remaining_race: decoupling principals is needed, but the current lock scope is not durable enough.",
+      "issue_evidence_gaps": "The review did not spin up a remote A2A service; the issue is derived from session clone identity and the locking map key.",
+      "evidence_checked": "Current PR head 392af7530e8b7869281771228734fe379ffb361a, changed files, refreshed checks where available, existing review comments, and the current diff for every posted line.",
+      "reproduction_on_base": "Full runtime reproduction was not executed locally; the finding is grounded in current code paths and documented contracts.",
+      "outcome": "1 inline comment posted on the current head.",
+      "risk": "Maintainers should keep the PR unmerged until the posted findings are addressed and checks are clean.",
+      "ci_state": "Current effective checks refreshed: 164 checks, non-green=0.",
+      "inline_comments": [
+        {
+          "path": "agent/a2aagent/a2a_agent.go",
+          "line": 279,
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2163#discussion_r3594339797",
+          "severity": "high",
+          "focus": "anonymous cookie initialization lock uses clone pointer identity",
+          "body": "Concurrent first anonymous calls for the same persisted session can still bypass this lock because the scope key uses the cloned `*session.Session` pointer. Key initialization by the logical persistent session identity plus cookie state key, and reload/share the persisted cookie inside the lock so parallel `runner.Run` calls converge on one remote principal.\n\n<details><summary>中文</summary>\n同一个持久化 session 的首次匿名并发调用仍可能绕过这把锁，因为 scope key 使用的是克隆后的 `*session.Session` 指针。请改为用逻辑持久化 session 身份加 cookie state key 作为锁键，并在锁内重新读取/共享持久化 cookie，确保并发的 `runner.Run` 收敛到同一个远端 principal。\n</details>"
+        }
+      ],
+      "attention_points": [
+        "agent/a2aagent/a2a_agent.go:279 anonymous cookie initialization lock uses clone pointer identity"
+      ],
+      "review_action": "Posted 1 inline GitHub comment; no approval, request-changes review, LGTM label, or merge was submitted.",
+      "merge_policy": "blocked_by_review_findings"
+    }
+  ],
+  "maintained": [],
+  "blocked": [],
+  "skipped_groups": [
+    {
+      "reason": "reviewed_clean_waiting_human_confirmation",
+      "label": "已复核待人工确认",
+      "prs": [
+        2216,
+        2205,
+        2204,
+        2203,
+        2202,
+        2201,
+        2198,
+        2193,
+        2192,
+        2191,
+        2190,
+        2189,
+        2187,
+        2186,
+        2185,
+        2184,
+        2183,
+        2177,
+        2174,
+        2164,
+        2160,
+        2157,
+        2153,
+        2152,
+        2146,
+        2142,
+        2136,
+        2135,
+        2134,
+        2128,
+        2125,
+        2124,
+        2121,
+        2118,
+        2090,
+        2089,
+        2088,
+        2087,
+        2084,
+        2055,
+        2051,
+        2050,
+        2045,
+        2044,
+        1967,
+        1957,
+        1956,
+        1930,
+        1923,
+        1901,
+        1801,
+        1736,
+        1446,
+        1400,
+        1183
+      ],
+      "items": [
+        {
+          "number": 2216,
+          "title": "evaluation: add reproducible prompt optimization regression loop",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2216",
+          "author": "gallie14",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 57511de39eaed735dd3fac729a832a5b1fdf03ee; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 164 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 57511de39eaed735dd3fac729a832a5b1fdf03ee; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2205,
+          "title": "docs: document noop session usage",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2205",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 90cdccce066a0389f83b7a6ef1b48342a806141b; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 90cdccce066a0389f83b7a6ef1b48342a806141b; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2204,
+          "title": "evolution: add reflective skill optimizer",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2204",
+          "author": "Rememorio",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 37e92618774f3794370f7b9f97058d04fbe5379e; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 164 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 37e92618774f3794370f7b9f97058d04fbe5379e; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2203,
+          "title": "model/openai: reduce logprob byte allocations",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2203",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 81978b8e645ddce79342d27dc354fb348345e2d6; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 81978b8e645ddce79342d27dc354fb348345e2d6; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2202,
+          "title": "tool/safety: add tool execution safety guard",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2202",
+          "author": "LuisQin01",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 6c80db9de43b1718152fdd85b348de063c727d30; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 6c80db9de43b1718152fdd85b348de063c727d30; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2201,
+          "title": "feat(evaluation): add PromptIter regression loop",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2201",
+          "author": "zezhen0222",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 2c9cc88d829d8b18d4ec4ec853a9de3ed66989a1; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 2c9cc88d829d8b18d4ec4ec853a9de3ed66989a1; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2198,
+          "title": "docs: call out the prompt-cache cost of WithAddCurrentTime and instruction placeholders",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2198",
+          "author": "lofder",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 5e3a703c6b5b2ee53bd614a6da6ba7c23e2a4993; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 5e3a703c6b5b2ee53bd614a6da6ba7c23e2a4993; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2193,
+          "title": "examples: add tool execution safety guard",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2193",
+          "author": "March-77",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 3d96c6a1aea6fbc72452725b2d71570d6fe0c785; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 162 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 3d96c6a1aea6fbc72452725b2d71570d6fe0c785; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2192,
+          "title": "examples: add session replay consistency harness",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2192",
+          "author": "March-77",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head f68083fee1c466276a9bcfc4395db2de9b2c047b; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 162 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head f68083fee1c466276a9bcfc4395db2de9b2c047b; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2191,
+          "title": "examples: add prompt optimization regression loop",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2191",
+          "author": "March-77",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head d2039a1b8de57d30b91104e022236fed63691f41; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 162 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head d2039a1b8de57d30b91104e022236fed63691f41; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2190,
+          "title": "examples: add sandboxed code review agent",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2190",
+          "author": "March-77",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head c617141d1b9d0715f48a2228798eb4ad4073c3dc; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 162 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head c617141d1b9d0715f48a2228798eb4ad4073c3dc; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2189,
+          "title": "session/replaytest：新增多后端回放一致性测试框架",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2189",
+          "author": "shsaihdsaiudh",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 9afdceba18c3ca2b8439cf35a4d65dc208fa65a3; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 9afdceba18c3ca2b8439cf35a4d65dc208fa65a3; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2187,
+          "title": "feat:Evaluation + Optimization pipeline",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2187",
+          "author": "zhuyanhuazhuyanhua",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 6320350c1b15ee56bd1b56a072ee622bbe0f2dd4; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 6320350c1b15ee56bd1b56a072ee622bbe0f2dd4; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2186,
+          "title": "examples/evaluation: add PromptIter regression loop",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2186",
+          "author": "Spock12138",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head fc8d50f2a6b3beae7bca1eb87b8c94c181a8adac; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head fc8d50f2a6b3beae7bca1eb87b8c94c181a8adac; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2185,
+          "title": "tool/safety：新增可扩展的工具执行安全防护机制",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2185",
+          "author": "shsaihdsaiudh",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 2e096974042fd0511b08ae2e917910bd75ea0a83; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 2e096974042fd0511b08ae2e917910bd75ea0a83; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2184,
+          "title": "evaluation: add PromptIter regression optimization loop",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2184",
+          "author": "xyxhhhhh",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 23c1f8134b5bd3ac5e47c090e71018131b7e4e3c; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 162 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 23c1f8134b5bd3ac5e47c090e71018131b7e4e3c; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2183,
+          "title": "test: feat replaytest harness",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2183",
+          "author": "xiaocaidie313",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 9605ab9fd7355ced656b50f52d8ff350bb47e8aa; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 164 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 9605ab9fd7355ced656b50f52d8ff350bb47e8aa; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2177,
+          "title": "Feat/code review agent",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2177",
+          "author": "Violet2314",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 7f0da80a4837ecd9afc81f3950a81e0af9bb26be; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 7f0da80a4837ecd9afc81f3950a81e0af9bb26be; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2174,
+          "title": "tool/safety: add tool execution safety guard",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2174",
+          "author": "xyxhhhhh",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 67028c842632370b7195f88b6e06cba9bbe37062; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 67028c842632370b7195f88b6e06cba9bbe37062; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2164,
+          "title": "evaluation: add evaluation + prompt optimization regression loop",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2164",
+          "author": "everfid-ever",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 2395f23e72c3bea9ee8c98d809bfe368b2d24178; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 2395f23e72c3bea9ee8c98d809bfe368b2d24178; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2160,
+          "title": "test: add session memory replay consistency harness",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2160",
+          "author": "xyxhhhhh",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 590953f1b7e3c03c79c510576d93b7d37281e2ab; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 590953f1b7e3c03c79c510576d93b7d37281e2ab; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2157,
+          "title": "evaluation/promptiter: add eval+optimization regression loop with aud…",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2157",
+          "author": "d2bz",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head bce92c5e83925fb3d984750f54199451f6793664; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 162 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head bce92c5e83925fb3d984750f54199451f6793664; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2153,
+          "title": "[codex] add tool execution safety guard",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2153",
+          "author": "GodBlf",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 75a2204bc582262f836df17a8246897c72444117; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 162 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 75a2204bc582262f836df17a8246897c72444117; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2152,
+          "title": "构建 Evaluation + Optimization 自动回归闭环",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2152",
+          "author": "GodBlf",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 73241763e5184abd5f8f677d83eda3d29db77629; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 73241763e5184abd5f8f677d83eda3d29db77629; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2146,
+          "title": "[codex] add replay consistency harness",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2146",
+          "author": "GodBlf",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head a3773101339cd68dcb87ffc67f7e094caf877496; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head a3773101339cd68dcb87ffc67f7e094caf877496; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2142,
+          "title": "session/redis: add WithDisableScriptCache to run Lua scripts via EVAL",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2142",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 816463ef0c13084e048ad06c6e7c0fb7aa28be5a; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 816463ef0c13084e048ad06c6e7c0fb7aa28be5a; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2136,
+          "title": "tool/safety: add pre-execution safety scanner",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2136",
+          "author": "XnLemon",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 71cd0a133859bd4dabdc9e800a32cf64fc116e44; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 161 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 71cd0a133859bd4dabdc9e800a32cf64fc116e44; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2135,
+          "title": "feat(examples/skills_code_review_agent): add static Go code review agent",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2135",
+          "author": "Lfan-ke",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head a52a3378dc277c37c892e42cb3dbef87bac5f35d; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head a52a3378dc277c37c892e42cb3dbef87bac5f35d; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2134,
+          "title": "test: add replay consistency harness",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2134",
+          "author": "Spock12138",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 62c2ab59082690a5a746e9c9432ecc1bb29ed431; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 162 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 62c2ab59082690a5a746e9c9432ecc1bb29ed431; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2128,
+          "title": "memory/gorm: GORM-backed memory.Service with shared DB injection",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2128",
+          "author": "sks",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 55897e8f2a0714c945ea92673b2dddfc2da83c29; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 55897e8f2a0714c945ea92673b2dddfc2da83c29; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2125,
+          "title": "codeexecutor, agent/llmagent: make workspace registry pluggable via WorkspaceAcquirer",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2125",
+          "author": "grignolalouis",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 4fa403fd31dd17e8d83abfd7ee7c89b54074e054; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 162 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 4fa403fd31dd17e8d83abfd7ee7c89b54074e054; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2124,
+          "title": "tool/file: handle nil list and search requests",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2124",
+          "author": "ahfoysal",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 1f6731c5e26aa7c18f3393aca74a54f1ba0dfd93; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 1f6731c5e26aa7c18f3393aca74a54f1ba0dfd93; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2121,
+          "title": "examples/code_review_agent: add sandboxed code review agent example",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2121",
+          "author": "XnLemon",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 707819023c7957fd6ea9712c284fe77589f0deb9; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 162 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 707819023c7957fd6ea9712c284fe77589f0deb9; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2118,
+          "title": "feat: add Tool Execution Safety Guard for pre-execution command scanning #2002",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2118",
+          "author": "xiaobaicai66695",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head fc357b9bcb1ea00b77b6dfde6287787bffb7f9fc; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head fc357b9bcb1ea00b77b6dfde6287787bffb7f9fc; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2090,
+          "title": "feat(examples): add code review agent with skill, sandbox, and database storage",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2090",
+          "author": "coder-mtj",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 87f0a57d18279b73ed256dc7084a2b0f2de02ef4; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 87f0a57d18279b73ed256dc7084a2b0f2de02ef4; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2089,
+          "title": "feat(tool): add pre-execution safety scanner with OTel integration",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2089",
+          "author": "coder-mtj",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 54862a063d371c5a1117fcbc501f223c77d229fb; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 54862a063d371c5a1117fcbc501f223c77d229fb; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2088,
+          "title": "feat(session): add multi-backend replay consistency test framework",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2088",
+          "author": "coder-mtj",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 914e015d63c5e9f16eb3239396721b8c534eca7b; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 914e015d63c5e9f16eb3239396721b8c534eca7b; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2087,
+          "title": "codeexecutor/opensandbox: add OpenSandbox remote executor",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2087",
+          "author": "Violet2314",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 9a8203c3a0e61762b56708d835c7fd883de59616; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 162 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 9a8203c3a0e61762b56708d835c7fd883de59616; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2084,
+          "title": "feat(model/anthropic): retry streaming requests on transient transport failures",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2084",
+          "author": "sks",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 719241f06269937387affcc39dae40aea6770047; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 719241f06269937387affcc39dae40aea6770047; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2055,
+          "title": "feat: 新增会话回放一致性测试工具链",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2055",
+          "author": "mingri31164",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 322fba1998e221ec75b0efe13f58888e79bc6432; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 322fba1998e221ec75b0efe13f58888e79bc6432; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2051,
+          "title": "session/replaytest: add multi-backend replay consistency test framework",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2051",
+          "author": "xiaosansh",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head a9c7ea990c122277b62ebe12296d54ff695cceb3; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head a9c7ea990c122277b62ebe12296d54ff695cceb3; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2050,
+          "title": "feat(tool/safety): add tool execution safety guard",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2050",
+          "author": "d2bz",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 681d7ed9178a12c0d1ea4afeefd04838dbb0b93e; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 681d7ed9178a12c0d1ea4afeefd04838dbb0b93e; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2045,
+          "title": "feat: add tool execution safety guard",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2045",
+          "author": "everfid-ever",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head d55bbb67ae6f7b365b98d31779365f8e75189072; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head d55bbb67ae6f7b365b98d31779365f8e75189072; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 2044,
+          "title": "feat: Tool Safety Scanner with 8 rules and structured audit",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2044",
+          "author": "Nerdlet369",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 68c70da678f51b850fb0985a5430109409e508c6; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 68c70da678f51b850fb0985a5430109409e508c6; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 1967,
+          "title": "fix(sqlite): allow WithAsyncSummaryNum(0) to disable async workers",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1967",
+          "author": "YellowDusk04",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 49bac0ed9e90d8583df491bb50c66606d6447d08; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 49bac0ed9e90d8583df491bb50c66606d6447d08; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 1957,
+          "title": "fix(session/postgres): cast JSON bytes to string for DB params",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1957",
+          "author": "Ocyss",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 53153210b0c6a0e48b125ad9abcfdd92e30ac370; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 53153210b0c6a0e48b125ad9abcfdd92e30ac370; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 1956,
+          "title": "langfuse: add environment config option and pass to OTEL resource attributes",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1956",
+          "author": "Ocyss",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 604d75d058aff6d4188832436925d7ed6344996a; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 604d75d058aff6d4188832436925d7ed6344996a; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 1930,
+          "title": "fix: set default HTTP client timeout to prevent goroutine leaks",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1930",
+          "author": "123456wda",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 576b11d6d1f4d19f85c04bbc1c27220251cc4d89; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 576b11d6d1f4d19f85c04bbc1c27220251cc4d89; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 1923,
+          "title": "fix(codeexecutor): honor CleanEnv in e2b runtime",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1923",
+          "author": "yu-xin-c",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head c424527fe8c693456692ca379deaada9ef3ff2d8; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head c424527fe8c693456692ca379deaada9ef3ff2d8; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 1901,
+          "title": "knowledge: deprecate legacy OCR path",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1901",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 776e73394c22bccb40561e6e48c65ed7fa795505; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "Current effective checks refreshed: 164 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 776e73394c22bccb40561e6e48c65ed7fa795505; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 1801,
+          "title": "docs/mkdocs/zh/fix/agent.md: fix typo",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1801",
+          "author": "GongNanyue",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head ef95fa2eee093cb689d1223a37d9ba32b4693dc4; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head ef95fa2eee093cb689d1223a37d9ba32b4693dc4; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 1736,
+          "title": "all: add deferred tool set",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1736",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 384aa5d638c4d54114adeac6718abc281ae18228; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 384aa5d638c4d54114adeac6718abc281ae18228; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 1446,
+          "title": "feat(a2a): add StructuredOutput → DataPart converter for custom event…",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1446",
+          "author": "SummerLv",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 79557d7bf2c6e666e4488d28cae3024d390fe941; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 79557d7bf2c6e666e4488d28cae3024d390fe941; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 1400,
+          "title": "{artifact, codeexectutor}: add Head method for artifact service to retrieve metadata without loading content",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1400",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 2e5bf368ac088be0a8c83a9858a5352e2ab80418; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 2e5bf368ac088be0a8c83a9858a5352e2ab80418; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        },
+        {
+          "number": 1183,
+          "title": "internal/util: add util for streaming parsing of JSON returned by LLM",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1183",
+          "author": "hongxiuzhe",
+          "status": "skipped",
+          "skip_reason": "Waiting for explicit maintainer confirmation before LGTM or merge.",
+          "readiness_audit": "Current head 53b1a26538f27b3fa570fc1768ac2b92ad8815ba; review decision=UNKNOWN; mergeability=UNKNOWN. No approval or merge was submitted.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "manual_review",
+              "summary": "Final LGTM or merge remains a maintainer decision after review of the current PR state.",
+              "verification": "Head 53b1a26538f27b3fa570fc1768ac2b92ad8815ba; review decision=UNKNOWN; mergeability=UNKNOWN."
+            }
+          ]
+        }
+      ],
+      "count": 55
+    },
+    {
+      "reason": "draft_or_wip",
+      "label": "Draft 或 WIP",
+      "prs": [
+        2235,
+        2233,
+        2215,
+        2212,
+        2196,
+        2144,
+        2143,
+        2133,
+        2086,
+        2076,
+        2058,
+        2047,
+        2037,
+        2010,
+        1778,
+        1710,
+        1678
+      ],
+      "items": [
+        {
+          "number": 2235,
+          "title": "session: expose persistent backend schema versions",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2235",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "Current effective checks refreshed: 164 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 2233,
+          "title": "feat(memory): add an opt-in conservative update policy for auto memory",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2233",
+          "author": "print-happy",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "Current effective checks refreshed: 164 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 2215,
+          "title": "knowledge: keep fixed-size overlap within chunk size",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2215",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 2212,
+          "title": "coderuntime: harden local Python runners",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2212",
+          "author": "bytethm",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 2196,
+          "title": "memory: improve automatic memory extraction reliability",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2196",
+          "author": "Rememorio",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "Current effective checks refreshed: 164 checks, non-green=0.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 2144,
+          "title": "openclaw: add durable request context prompts",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2144",
+          "author": "bytethm",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 2143,
+          "title": "[WIP] tool/okf: Open Knowledge Format (OKF) support",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2143",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=true; wait for the author to mark the PR ready.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=true."
+            }
+          ]
+        },
+        {
+          "number": 2133,
+          "title": "agent/llmagent: continue after image URL failures",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2133",
+          "author": "bytethm",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 2086,
+          "title": "fix(model/anthropic): repair truncated tool_use input before stream finalize",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2086",
+          "author": "sks",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 2076,
+          "title": "feat(sandbox): add macOS denial diagnostics",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2076",
+          "author": "cuboya",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 2058,
+          "title": "a2a: add v2 packages backed by trpc-a2a-go/v2 (A2A protocol v1.0)",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2058",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 2047,
+          "title": "agent: add durable session context sources",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2047",
+          "author": "bytethm",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 2037,
+          "title": "feat(telemetry): add invoke skill observability",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2037",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 2010,
+          "title": "memory/deepsearch: add progressive DeepSearch",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2010",
+          "author": "print-happy",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 1778,
+          "title": "examples: add RLM (Recursive Language Model) demo",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1778",
+          "author": "hyprh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 1710,
+          "title": "a2a: add input schema",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1710",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        },
+        {
+          "number": 1678,
+          "title": "agent: centralize invoke_agent telemetry in RunWithPlugins",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/1678",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "Draft/WIP PR; review action is deferred.",
+          "readiness_audit": "draft=true, wip=false; wait for the author to mark the PR ready.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "draft_wip",
+              "summary": "Author has not marked the PR ready for final review.",
+              "verification": "draft=true, wip=false."
+            }
+          ]
+        }
+      ],
+      "count": 17
+    },
+    {
+      "reason": "soft_check_or_coverage_gate",
+      "label": "非阻断检查需确认",
+      "prs": [
+        2244,
+        2223,
+        2137,
+        2097
+      ],
+      "items": [
+        {
+          "number": 2244,
+          "title": "{server/agui, docs, examples}: add AG-UI run hooks",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2244",
+          "author": "Flash-LHR",
+          "status": "skipped",
+          "skip_reason": "Non-required check needs maintainer attention before final action.",
+          "readiness_audit": "Current check snapshot records 1 soft-gate issue(s).",
+          "ci_state": "Current effective checks refreshed: 164 checks, non-green=1; examples: codecov/patch=FAILURE.",
+          "blockers": [
+            {
+              "kind": "soft_ci",
+              "summary": "codecov/patch is FAILURE",
+              "verification": "workflow=external; details=https://app.codecov.io/gh/trpc-group/trpc-agent-go/pull/2244",
+              "url": "https://app.codecov.io/gh/trpc-group/trpc-agent-go/pull/2244"
+            }
+          ]
+        },
+        {
+          "number": 2223,
+          "title": "internal/flow: surface structured output parse failures",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2223",
+          "author": "liuzengh",
+          "status": "skipped",
+          "skip_reason": "Non-required check needs maintainer attention before final action.",
+          "readiness_audit": "Current check snapshot records 1 soft-gate issue(s).",
+          "ci_state": "Current effective checks refreshed: 164 checks, non-green=1; examples: codecov/patch=FAILURE.",
+          "blockers": [
+            {
+              "kind": "soft_ci",
+              "summary": "codecov/patch is FAILURE",
+              "verification": "workflow=external; details=https://app.codecov.io/gh/trpc-group/trpc-agent-go/pull/2223",
+              "url": "https://app.codecov.io/gh/trpc-group/trpc-agent-go/pull/2223"
+            }
+          ]
+        },
+        {
+          "number": 2137,
+          "title": "feat(toolsearch): refactor into namespaced toolbox with embedding search, MCP support and two-tool mode",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2137",
+          "author": "qiefengying",
+          "status": "skipped",
+          "skip_reason": "Non-required check needs maintainer attention before final action.",
+          "readiness_audit": "Current check snapshot records 1 soft-gate issue(s).",
+          "ci_state": "Current effective checks refreshed: 164 checks, non-green=1; examples: go-apidiff=FAILURE.",
+          "blockers": [
+            {
+              "kind": "soft_ci",
+              "summary": "go-apidiff is FAILURE",
+              "verification": "workflow=Pull Request Check; details=https://github.com/trpc-group/trpc-agent-go/actions/runs/29395288012/job/87287304617",
+              "url": "https://github.com/trpc-group/trpc-agent-go/actions/runs/29395288012/job/87287304617"
+            }
+          ]
+        },
+        {
+          "number": 2097,
+          "title": "feat(session,tool/context): Pensieve context self-pruning with example",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2097",
+          "author": "sks",
+          "status": "skipped",
+          "skip_reason": "Non-required check needs maintainer attention before final action.",
+          "readiness_audit": "Current check snapshot records 1 soft-gate issue(s).",
+          "ci_state": "Current effective checks refreshed: 164 checks, non-green=1; examples: codecov/patch=FAILURE.",
+          "blockers": [
+            {
+              "kind": "soft_ci",
+              "summary": "codecov/patch is FAILURE",
+              "verification": "workflow=external; details=https://app.codecov.io/gh/trpc-group/trpc-agent-go/pull/2097",
+              "url": "https://app.codecov.io/gh/trpc-group/trpc-agent-go/pull/2097"
+            }
+          ]
+        }
+      ],
+      "count": 4
+    },
+    {
+      "reason": "own_pr_no_self_review",
+      "label": "自有 PR 不自审",
+      "prs": [
+        2234,
+        2211,
+        2179,
+        2176,
+        2173,
+        2172,
+        2169,
+        2168,
+        2167,
+        2162,
+        2156,
+        2155
+      ],
+      "items": [
+        {
+          "number": 2234,
+          "title": "openclaw: preserve structured shared history",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2234",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "Maintainer-owned PR: no self-review, self-approval, or self-merge.",
+          "readiness_audit": "Current head 464f3a4f2070b1e12015d70335cbbda2beaae8d2; mergeability=UNKNOWN; review decision=UNKNOWN.",
+          "ci_state": "Current effective checks refreshed: 164 checks, non-green=1; examples: codecov/patch=FAILURE.",
+          "blockers": [
+            {
+              "kind": "own_pr",
+              "summary": "Maintainer-owned PR is not reviewed, approved, or merged by the same account.",
+              "verification": "No CONFLICTING mergeability state recorded (mergeable=UNKNOWN)."
+            },
+            {
+              "kind": "soft_ci",
+              "summary": "codecov/patch is FAILURE",
+              "verification": "workflow=external; details=https://app.codecov.io/gh/trpc-group/trpc-agent-go/pull/2234",
+              "url": "https://app.codecov.io/gh/trpc-group/trpc-agent-go/pull/2234"
+            }
+          ]
+        },
+        {
+          "number": 2211,
+          "title": "processor: persist completed tool responses after deadline",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2211",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "Maintainer-owned PR: no self-review, self-approval, or self-merge.",
+          "readiness_audit": "Current head 933878046f6a38bbcaac219228caa12cc9ad3871; mergeability=UNKNOWN; review decision=UNKNOWN.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "own_pr",
+              "summary": "Maintainer-owned PR is not reviewed, approved, or merged by the same account.",
+              "verification": "No CONFLICTING mergeability state recorded (mergeable=UNKNOWN)."
+            }
+          ]
+        },
+        {
+          "number": 2179,
+          "title": "openclaw: keep yielded exec sessions alive",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2179",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "Maintainer-owned PR: no self-review, self-approval, or self-merge.",
+          "readiness_audit": "Current head 14c5629beb6557a5a97a5501af037cc53596a8f6; mergeability=UNKNOWN; review decision=UNKNOWN.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "own_pr",
+              "summary": "Maintainer-owned PR is not reviewed, approved, or merged by the same account.",
+              "verification": "No CONFLICTING mergeability state recorded (mergeable=UNKNOWN)."
+            }
+          ]
+        },
+        {
+          "number": 2176,
+          "title": "tool/arxivsearch: limit PDF content results",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2176",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "Maintainer-owned PR: no self-review, self-approval, or self-merge.",
+          "readiness_audit": "Current head 742b9633cd20bd091ed62266a173cc470f3a3e17; mergeability=UNKNOWN; review decision=UNKNOWN.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "own_pr",
+              "summary": "Maintainer-owned PR is not reviewed, approved, or merged by the same account.",
+              "verification": "No CONFLICTING mergeability state recorded (mergeable=UNKNOWN)."
+            }
+          ]
+        },
+        {
+          "number": 2173,
+          "title": "openclaw/subagentrun: allow sync spawn without delivery",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2173",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "Maintainer-owned PR: no self-review, self-approval, or self-merge.",
+          "readiness_audit": "Current head d21a2180e823867d83843bd6d5118ca323a931f5; mergeability=UNKNOWN; review decision=UNKNOWN.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "own_pr",
+              "summary": "Maintainer-owned PR is not reviewed, approved, or merged by the same account.",
+              "verification": "No CONFLICTING mergeability state recorded (mergeable=UNKNOWN)."
+            }
+          ]
+        },
+        {
+          "number": 2172,
+          "title": "openclaw/imageinspect: tolerate duplicated attachment paths",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2172",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "Maintainer-owned PR: no self-review, self-approval, or self-merge.",
+          "readiness_audit": "Current head f546729204502c62fc151ac3566c0003707bd7af; mergeability=UNKNOWN; review decision=UNKNOWN.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "own_pr",
+              "summary": "Maintainer-owned PR is not reviewed, approved, or merged by the same account.",
+              "verification": "No CONFLICTING mergeability state recorded (mergeable=UNKNOWN)."
+            }
+          ]
+        },
+        {
+          "number": 2169,
+          "title": "openclaw/browser: support server act targets",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2169",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "Maintainer-owned PR: no self-review, self-approval, or self-merge.",
+          "readiness_audit": "Current head c1813c4ad77d63530620c2361c9a436f83b82238; mergeability=UNKNOWN; review decision=UNKNOWN.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "own_pr",
+              "summary": "Maintainer-owned PR is not reviewed, approved, or merged by the same account.",
+              "verification": "No CONFLICTING mergeability state recorded (mergeable=UNKNOWN)."
+            }
+          ]
+        },
+        {
+          "number": 2168,
+          "title": "openclaw/app: sanitize MCP image tool messages",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2168",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "Maintainer-owned PR: no self-review, self-approval, or self-merge.",
+          "readiness_audit": "Current head 9840539928ccfdf3895a3771be202680c679de35; mergeability=UNKNOWN; review decision=UNKNOWN.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "own_pr",
+              "summary": "Maintainer-owned PR is not reviewed, approved, or merged by the same account.",
+              "verification": "No CONFLICTING mergeability state recorded (mergeable=UNKNOWN)."
+            }
+          ]
+        },
+        {
+          "number": 2167,
+          "title": "openclaw/app: require visible final answer on budget finalization",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2167",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "Maintainer-owned PR: no self-review, self-approval, or self-merge.",
+          "readiness_audit": "Current head f79f28a6603708472ae83fde58cea9f7eb356beb; mergeability=UNKNOWN; review decision=UNKNOWN.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "own_pr",
+              "summary": "Maintainer-owned PR is not reviewed, approved, or merged by the same account.",
+              "verification": "No CONFLICTING mergeability state recorded (mergeable=UNKNOWN)."
+            }
+          ]
+        },
+        {
+          "number": 2162,
+          "title": "openclaw/app: finalize near request deadline",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2162",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "Maintainer-owned PR: no self-review, self-approval, or self-merge.",
+          "readiness_audit": "Current head 717d037197064b7b55e22ebcdecf4b7b416063dc; mergeability=UNKNOWN; review decision=UNKNOWN.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "own_pr",
+              "summary": "Maintainer-owned PR is not reviewed, approved, or merged by the same account.",
+              "verification": "No CONFLICTING mergeability state recorded (mergeable=UNKNOWN)."
+            }
+          ]
+        },
+        {
+          "number": 2156,
+          "title": "agent,openclaw: repair text-form tool calls",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2156",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "Maintainer-owned PR: no self-review, self-approval, or self-merge.",
+          "readiness_audit": "Current head d8976001ebd393266fde2ee899a9bb7d6d452c36; mergeability=UNKNOWN; review decision=UNKNOWN.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "own_pr",
+              "summary": "Maintainer-owned PR is not reviewed, approved, or merged by the same account.",
+              "verification": "No CONFLICTING mergeability state recorded (mergeable=UNKNOWN)."
+            }
+          ]
+        },
+        {
+          "number": 2155,
+          "title": "openclaw,tool: guard blocked web research routes",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2155",
+          "author": "WineChord",
+          "status": "skipped",
+          "skip_reason": "Maintainer-owned PR: no self-review, self-approval, or self-merge.",
+          "readiness_audit": "Current head 5124c931db41d11115af5986da6017f2c399aceb; mergeability=UNKNOWN; review decision=UNKNOWN.",
+          "ci_state": "No refreshed check snapshot was available for this PR in the saved run artifacts.",
+          "blockers": [
+            {
+              "kind": "own_pr",
+              "summary": "Maintainer-owned PR is not reviewed, approved, or merged by the same account.",
+              "verification": "No CONFLICTING mergeability state recorded (mergeable=UNKNOWN)."
+            }
+          ]
+        }
+      ],
+      "count": 12
+    },
+    {
+      "reason": "hard_ci_or_required_check_failure",
+      "label": "Required check 未通过",
+      "prs": [
+        2242,
+        2241,
+        2240,
+        2231
+      ],
+      "items": [
+        {
+          "number": 2242,
+          "title": "feat(session): 新增多后端 replay 一致性测试框架（#2001）",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2242",
+          "author": "DadaVinqi",
+          "status": "skipped",
+          "skip_reason": "Required checks are failing; code review is deferred until CI is repaired.",
+          "readiness_audit": "Current check snapshot records 3 required failure(s).",
+          "ci_state": "Current effective checks refreshed: 163 checks, non-green=3; examples: go test (go.mod)=FAILURE, lint=FAILURE, check go.mod version=FAILURE.",
+          "blockers": [
+            {
+              "kind": "ci",
+              "summary": "go test (go.mod) is FAILURE",
+              "verification": "workflow=Pull Request Check; details=https://github.com/trpc-group/trpc-agent-go/actions/runs/29483271734/job/87571786307",
+              "url": "https://github.com/trpc-group/trpc-agent-go/actions/runs/29483271734/job/87571786307"
+            },
+            {
+              "kind": "ci",
+              "summary": "lint is FAILURE",
+              "verification": "workflow=Pull Request Check; details=https://github.com/trpc-group/trpc-agent-go/actions/runs/29483271734/job/87571713491",
+              "url": "https://github.com/trpc-group/trpc-agent-go/actions/runs/29483271734/job/87571713491"
+            },
+            {
+              "kind": "ci",
+              "summary": "check go.mod version is FAILURE",
+              "verification": "workflow=Pull Request Check; details=https://github.com/trpc-group/trpc-agent-go/actions/runs/29483271734/job/87571713546",
+              "url": "https://github.com/trpc-group/trpc-agent-go/actions/runs/29483271734/job/87571713546"
+            }
+          ]
+        },
+        {
+          "number": 2241,
+          "title": "feat: add security scan, permission filter and monitor",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2241",
+          "author": "BG0527",
+          "status": "skipped",
+          "skip_reason": "Required checks are failing; code review is deferred until CI is repaired.",
+          "readiness_audit": "Current check snapshot records 4 required failure(s).",
+          "ci_state": "Current effective checks refreshed: 162 checks, non-green=4; examples: check file size=FAILURE, check examples build script (1/4)=FAILURE, typos=FAILURE, check examples (1/4)=FAILURE.",
+          "blockers": [
+            {
+              "kind": "ci",
+              "summary": "check file size is FAILURE",
+              "verification": "workflow=Pull Request Check; details=https://github.com/trpc-group/trpc-agent-go/actions/runs/29477120946/job/87552398010",
+              "url": "https://github.com/trpc-group/trpc-agent-go/actions/runs/29477120946/job/87552398010"
+            },
+            {
+              "kind": "ci",
+              "summary": "check examples build script (1/4) is FAILURE",
+              "verification": "workflow=Pull Request Check; details=https://github.com/trpc-group/trpc-agent-go/actions/runs/29477120946/job/87552397938",
+              "url": "https://github.com/trpc-group/trpc-agent-go/actions/runs/29477120946/job/87552397938"
+            },
+            {
+              "kind": "ci",
+              "summary": "typos is FAILURE",
+              "verification": "workflow=Pull Request Check; details=https://github.com/trpc-group/trpc-agent-go/actions/runs/29477120946/job/87552397985",
+              "url": "https://github.com/trpc-group/trpc-agent-go/actions/runs/29477120946/job/87552397985"
+            },
+            {
+              "kind": "ci",
+              "summary": "check examples (1/4) is FAILURE",
+              "verification": "workflow=Pull Request Check; details=https://github.com/trpc-group/trpc-agent-go/actions/runs/29477120946/job/87552397909",
+              "url": "https://github.com/trpc-group/trpc-agent-go/actions/runs/29477120946/job/87552397909"
+            }
+          ]
+        },
+        {
+          "number": 2240,
+          "title": "新增 Go 自动代码评审 Agent 示例",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2240",
+          "author": "Skylm808",
+          "status": "skipped",
+          "skip_reason": "Required checks are failing; code review is deferred until CI is repaired.",
+          "readiness_audit": "Current check snapshot records 1 required failure(s).",
+          "ci_state": "Current effective checks refreshed: 163 checks, non-green=1; examples: lint=FAILURE.",
+          "blockers": [
+            {
+              "kind": "ci",
+              "summary": "lint is FAILURE",
+              "verification": "workflow=Pull Request Check; details=https://github.com/trpc-group/trpc-agent-go/actions/runs/29429315147/job/87399891669",
+              "url": "https://github.com/trpc-group/trpc-agent-go/actions/runs/29429315147/job/87399891669"
+            }
+          ]
+        },
+        {
+          "number": 2231,
+          "title": "fix: fix panic recovery vulnerability in event emission",
+          "url": "https://github.com/trpc-group/trpc-agent-go/pull/2231",
+          "author": "xiaoyulox",
+          "status": "skipped",
+          "skip_reason": "Required checks are failing; code review is deferred until CI is repaired.",
+          "readiness_audit": "Current check snapshot records 1 required failure(s).",
+          "ci_state": "Current effective checks refreshed: 162 checks, non-green=1; examples: check go.mod version=FAILURE.",
+          "blockers": [
+            {
+              "kind": "ci",
+              "summary": "check go.mod version is FAILURE",
+              "verification": "workflow=Pull Request Check; details=https://github.com/trpc-group/trpc-agent-go/actions/runs/29474121177/job/87543343387",
+              "url": "https://github.com/trpc-group/trpc-agent-go/actions/runs/29474121177/job/87543343387"
+            }
+          ]
+        }
+      ],
+      "count": 4
+    }
+  ],
+  "follow_up": [
+    {
+      "title": "人工确认队列",
+      "reason": "55 个 PR 已复核但仍需 maintainer 明确确认后再进入 LGTM 或合入流程。"
+    },
+    {
+      "title": "自有 PR 状态",
+      "reason": "自有 PR 本轮不自审不自合；#2234 当前有 codecov/patch 软门禁，未记录 CONFLICTING 状态。"
+    },
+    {
+      "title": "已有反馈复查",
+      "reason": "0 个 PR 已有可执行反馈，等待作者更新或 maintainer 判断后再复核。"
+    }
+  ],
+  "skill_evolution": [
+    {
+      "area": "状态刷新",
+      "note": "GraphQL 状态批量查询出现 502/504 时仍需更细粒度降级，避免手工改用 REST 后再拼回台账。"
+    },
+    {
+      "area": "评论投递",
+      "note": "重复评论检测需要统一使用精简字段查询，避免拉取完整 diff_hunk 导致本地缓冲区溢出。"
+    },
+    {
+      "area": "报告完整性",
+      "note": "报告继续强制 open PR 覆盖率、自有 PR 冲突状态、评论 URL 和跳过原因同时可见。"
+    },
+    {
+      "area": "公共归档",
+      "note": "公共报告只剥离私有运行字段，不改写真实 GitHub 评论正文和结构化枚举。"
+    }
+  ]
+}

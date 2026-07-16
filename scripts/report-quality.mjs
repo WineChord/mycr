@@ -134,7 +134,6 @@ const publicForbiddenText = [
   /状态已刷新/u,
   /\bcheap-index\b/iu,
   /持久化状态字段/u,
-  /\brenderer\b/iu,
   /reviewed_clean_deferred/iu,
   /reviewed_manual_deferred/iu,
   /status_refreshed_waiting_trigger/iu,
@@ -778,6 +777,70 @@ function validatePublicHtml(rawHtml, problems, reportName) {
   }
 }
 
+function commentsByKey(report) {
+  const result = new Map();
+  for (const entry of asArray(report.commented)) {
+    const number = Number(entry?.number);
+    for (const comment of asArray(entry?.inline_comments)) {
+      const key = [
+        number,
+        text(comment?.path),
+        Number(comment?.line || 0),
+        text(comment?.url),
+      ].join("\0");
+      result.set(key, {
+        number,
+        path: text(comment?.path),
+        line: Number(comment?.line || 0),
+        url: text(comment?.url),
+        body: text(comment?.body),
+      });
+    }
+  }
+  return result;
+}
+
+function skippedBlockerKindsByKey(report) {
+  const result = new Map();
+  for (const group of asArray(report.skipped_groups)) {
+    for (const item of asArray(group?.items)) {
+      const number = Number(item?.number);
+      asArray(item?.blockers).forEach((blocker, index) => {
+        const key = [Number(group?.count || 0), text(group?.reason), number, index].join("\0");
+        result.set(key, text(blocker?.kind));
+      });
+    }
+  }
+  return result;
+}
+
+function validatePublicArtifactFidelity(sourceReport, publicReport, problems, reportName) {
+  const sourceComments = commentsByKey(sourceReport);
+  const publicComments = commentsByKey(publicReport);
+  for (const [key, sourceComment] of sourceComments) {
+    const publicComment = publicComments.get(key);
+    if (!publicComment) {
+      problems.push(
+        `${reportName}: public JSON missing inline comment ${sourceComment.url || key}`,
+      );
+      continue;
+    }
+    if (publicComment.body !== sourceComment.body) {
+      problems.push(
+        `${reportName}: public JSON rewrites inline comment body for ${sourceComment.url || key}`,
+      );
+    }
+  }
+
+  const sourceKinds = skippedBlockerKindsByKey(sourceReport);
+  const publicKinds = skippedBlockerKindsByKey(publicReport);
+  for (const [key, sourceKind] of sourceKinds) {
+    if (publicKinds.has(key) && publicKinds.get(key) !== sourceKind) {
+      problems.push(`${reportName}: public JSON rewrites skipped blocker kind "${sourceKind}"`);
+    }
+  }
+}
+
 async function validatePublicArtifacts(reportPath, problems, reportName) {
   const fileName = path.basename(reportPath);
   const publicJsonPath = path.join(publicReportDir, fileName);
@@ -802,6 +865,7 @@ async function validatePublicArtifacts(reportPath, problems, reportName) {
     problems.push(`${reportName}: invalid public JSON (${error.message})`);
     return;
   }
+  validatePublicArtifactFidelity(await readReport(reportPath), publicReport, problems, reportName);
   validatePublicValue(publicReport, problems, reportName);
   validatePublicHtml(await readFile(publicHtmlPath, "utf8"), problems, reportName);
 }

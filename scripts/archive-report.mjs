@@ -23,99 +23,6 @@ const privateNestedFields = new Set([
   "target_checkout_dirty_preserved",
   "target_worktree_dirty_preserved",
 ]);
-const publicReasonLabels = new Map([
-  ["reviewed_clean_waiting_human_confirmation", "已复核待人工确认"],
-  ["existing_actionable_feedback", "已有可执行反馈"],
-  ["previous_comments_waiting_author", "已有评论等待处理"],
-  ["own_pr_no_self_review", "自有 PR 不自审"],
-  ["locked_conversation_comment_delivery_risk", "会话锁定需确认评论投递"],
-  ["draft_or_wip", "Draft 或 WIP"],
-  ["hard_ci_or_required_check_failure", "Required check 未通过"],
-  ["soft_check_or_coverage_gate", "非阻断检查需确认"],
-  ["merge_conflict", "合并冲突"],
-  ["manual_review_or_existing_actionable_review", "需人工确认或已有反馈"],
-  ["not_reached_status_refresh", "等待新变化后复核"],
-  ["status_refreshed_waiting_trigger", "等待新变化后复核"],
-  ["not_reached_this_run", "本轮未处理到"],
-  ["late_new_pr_after_initial_scan", "运行后段新增 PR"],
-]);
-const publicBlockerKindLabels = new Map([
-  ["ci", "CI 检查"],
-  ["soft_ci", "非阻断检查"],
-  ["manual_review", "人工确认"],
-  ["human_review", "人工确认"],
-  ["merge_conflict", "合并冲突"],
-  ["draft_wip", "Draft 或 WIP"],
-  ["own_pr", "自有 PR"],
-  ["locked_conversation", "会话锁定"],
-  ["locked", "会话锁定"],
-  ["comment_delivery", "评论投递"],
-  ["existing_feedback", "已有反馈"],
-  ["status_refresh", "等待新变化"],
-  ["not_reached", "等待新变化"],
-  ["other", "其他"],
-]);
-const publicTextReplacements = [
-  [/\bsubagent\b/giu, "agent"],
-  [/按最新心跳重新执行/gu, "重新执行全量检查"],
-  [/按照用户明确要求/gu, "本轮采用 comment-only 策略"],
-  [/本轮用户要求只发 comments/gu, "本轮采用 comment-only 策略"],
-  [/本轮用户只允许 comments/gu, "本轮运行策略只允许提交 comments"],
-  [/本轮运行策略只允许提交 comments/gu, "本轮未执行审批或合入"],
-  [/这次按用户限制/gu, "本轮按 comment-only 策略"],
-  [/用户限制/gu, "运行策略"],
-  [/previous_reviewed_clean_comment_only/giu, "previously_reviewed_no_action"],
-  [/上轮已复核 clean/gu, "上轮已复核"],
-  [/本轮保持 deferred/gu, "本轮暂不审批"],
-  [/clean[-_ ]deferred/giu, "已复核但暂不审批"],
-  [/comment-only run/giu, "comment-only 模式"],
-  [/\bcomment-only\b/giu, "仅评论"],
-  [/lightweight state/giu, "状态复用"],
-  [/\bnot_reached_status_refresh\b/giu, "状态已刷新等待触发"],
-  [/增量计划/gu, "复核计划"],
-  [/历史状态字段/gu, "历史报告状态"],
-  [/轻量索引/gu, "状态索引"],
-  [/状态已刷新等待触发/gu, "等待新变化后复核"],
-  [/状态已刷新/gu, "等待新变化"],
-  [/持久化状态字段/gu, "可复用状态"],
-  [/\bcheap-index\b/giu, "状态索引"],
-  [/\brenderer\b/giu, "报告展示"],
-  [/reviewed_clean_deferred\s*\/\s*reviewed_manual_deferred/giu, "已复核但暂不审批 / 需人工选择后再处理"],
-  [/MyCR 已 fast-forward 检查/gu, "已完成仓库同步检查"],
-  [/fast-forward pull/giu, "同步"],
-  [/\bfast-forward\b/giu, "同步"],
-  [/刷新 origin\/wine\/june refs/giu, "刷新远端分支状态"],
-  [/origin\/wine\/june refs/giu, "远端分支状态"],
-  [/REST fallback/giu, "最新状态刷新"],
-  [/GitHub App 代发标识/giu, "可见代发标识"],
-  [/源 JSON\/质量检查/gu, "报告质量校验"],
-  [/源 JSON/gu, "报告数据"],
-  [/源报告/gu, "报告数据"],
-  [/质量检查/gu, "质量校验"],
-  [/源报告保留下一轮所需状态，公共报告剥离内部运行字段/gu, "报告已完成归档，公共页面只保留面向维护者的审计事实"],
-  [/计划器/gu, "复核流程"],
-  [/状态复用/gu, "已知状态沿用"],
-  [/深审/gu, "深入复核"],
-  [/未进入本轮深度复核队列/gu, "当前未发现新增高优先级触发信号"],
-  [/未进入深度复核队列/gu, "当前未发现新增高优先级触发信号"],
-  [/\bmetadata\b/giu, "状态信息"],
-  [/\bpublic JSON\/HTML\b/giu, "公共报告"],
-  [/内部运行词/gu, "内部诊断词"],
-  [/\blatest report\b/giu, "最新报告"],
-  [/\bRun-state\b/giu, "报告状态"],
-  [/\brun_state\b/giu, "报告状态"],
-  [/\brun-state\b/giu, "报告状态"],
-  [/\brun state\b/giu, "报告状态"],
-  [/\bcollector\b/giu, "状态采集器"],
-  [/\bnot_collected\b/giu, "未采集"],
-  [/\bprocessed\+skipped\b/giu, "已处理和暂缓处理"],
-  [/\bopen_prs\b/giu, "open PR 总数"],
-  [/\breview thread\b/giu, "review 线程"],
-  [/\blocked reason\b/giu, "锁定说明"],
-  [/\bmerge simulation\b/giu, "冲突预检查"],
-  [/指纹/gu, "状态摘要"],
-  [/公共报告 是否包含内部诊断词/gu, "维护者报告是否存在不应展示的诊断信息"],
-];
 
 function usage() {
   console.error(
@@ -167,7 +74,6 @@ function publicReportFrom(report) {
     delete publicReport[field];
   }
   stripPrivateNestedFields(publicReport);
-  rewritePublicText(publicReport);
   return publicReport;
 }
 
@@ -187,35 +93,6 @@ function stripPrivateNestedFields(value) {
       continue;
     }
     stripPrivateNestedFields(value[key]);
-  }
-}
-
-function rewritePublicText(value) {
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      rewritePublicText(item);
-    }
-    return;
-  }
-  if (!value || typeof value !== "object") {
-    return;
-  }
-  for (const [key, child] of Object.entries(value)) {
-    if (typeof child === "string") {
-      let publicText = child;
-      if (key === "reason" && publicReasonLabels.has(publicText)) {
-        publicText = publicReasonLabels.get(publicText);
-      }
-      if (key === "kind" && publicBlockerKindLabels.has(publicText)) {
-        publicText = publicBlockerKindLabels.get(publicText);
-      }
-      value[key] = publicTextReplacements.reduce(
-        (current, [pattern, replacement]) => current.replace(pattern, replacement),
-        publicText,
-      );
-      continue;
-    }
-    rewritePublicText(child);
   }
 }
 
